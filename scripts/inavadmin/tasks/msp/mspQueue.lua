@@ -145,7 +145,7 @@ function MspQueueController:processQueue()
                 self.currentMessageStartTime = self.lastTimeCommandSent
                 self.retryCount = self.retryCount + 1
                 if inavadmin.app.Page and inavadmin.app.Page.mspRetry then inavadmin.app.Page.mspRetry(self) end
-            end    
+            end
         end
 
         inavadmin.tasks.msp.common.mspProcessTxQ()
