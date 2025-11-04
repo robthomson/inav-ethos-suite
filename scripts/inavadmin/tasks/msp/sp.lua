@@ -13,6 +13,8 @@ local FPORT_REMOTE_SENSOR_ID = 0x00
 local REQUEST_FRAME_ID = 0x30
 local REPLY_FRAME_ID = 0x32
 
+local _POLL_SLICE_S = 0.008
+
 -- ===== MSPv2 tracking (tolerate FW that repeats START headers) ==============
 local v2_active         = false   -- true while a v2 reply is in-flight
 local v2_last_status    = 0x50    -- last status byte observed/synthesized
@@ -29,6 +31,33 @@ local function _mk_cont_status(prev)
 end
 
 local sensor
+
+
+local _frameLogEnabled = true
+
+function transport.enableFrameLog(state)
+    _frameLogEnabled = state and true or false
+    if inavadmin and inavadmin.utils and inavadmin.utils.log then
+        inavadmin.utils.log("[SP] frame logging " .. (_frameLogEnabled and "ENABLED" or "DISABLED"), "info")
+    end
+end
+
+local function _logFrame(sensorId, frameId, dataId, value)
+    if not _frameLogEnabled then return end
+    if inavadmin and inavadmin.utils and inavadmin.utils.log then
+        local msg = string.format(
+            "[SP RAW] sid=%02X fid=%02X did=%04X val=%08X bytes=[%02X %02X %02X %02X %02X %02X]",
+            sensorId & 0xFF, frameId & 0xFF, dataId & 0xFFFF, value & 0xFFFFFFFF,
+            dataId & 0xFF,
+            (dataId >> 8) & 0xFF,
+            value & 0xFF,
+            (value >> 8) & 0xFF,
+            (value >> 16) & 0xFF,
+            (value >> 24) & 0xFF
+        )
+        inavadmin.utils.log(msg, "info")
+    end
+end
 
 local function ensure_sensor()
   if not sensor then sensor = sport.getSensor({primId = 0x32}) end
@@ -118,27 +147,45 @@ local function map_v2_frame_to_window(status, dataId, value)
 end
 
 transport.mspPoll = function()
-  local sensorId, frameId, dataId, value = pop_no_dedup()
-  if not sensorId then return nil end
-
-  -- Only forward FC-origin REPLY frames (0x32) to MSP; never our 0x30 client frames.
-  if (sensorId == SPORT_REMOTE_SENSOR_ID or sensorId == FPORT_REMOTE_SENSOR_ID)
-     and (frameId == REPLY_FRAME_ID) then
-
-    local status = dataId & 0xFF
-    local ver = _ver_from_status(status)  -- 0/1=legacy, 2=MSPv2
-
-    if ver == 2 then
-      return map_v2_frame_to_window(status, dataId, value)
+  local t0 = os.clock()
+  while (os.clock() - t0) < _POLL_SLICE_S do
+    local sensorId, frameId, dataId, value = pop_no_dedup()
+    if not sensorId then
+      -- No frame yet; keep spinning within our micro-budget
+      goto continue
     end
 
-    -- v1 / legacy path: pass-through 6 bytes
-    return {
-      dataId & 0xFF, (dataId >> 8) & 0xFF,
-      value & 0xFF, (value >> 8) & 0xFF, (value >> 16) & 0xFF, (value >> 24) & 0xFF
-    }
+     _logFrame(sensorId, frameId, dataId, value)
+        
+    -- Only handle FC-origin reply frames; never echo our own client frames.
+    if (frameId == REPLY_FRAME_ID) and
+       (sensorId == SPORT_REMOTE_SENSOR_ID or sensorId == FPORT_REMOTE_SENSOR_ID) then
+
+      local status = dataId & 0xFF
+      local ver    = _ver_from_status(status)
+
+      if ver == 2 then
+        -- Map to a 6B window understood by common.lua’s MSPv2 receiver.
+        local out = map_v2_frame_to_window(status, dataId, value)
+        if out then return out end
+        -- If header/continuation not ready to emit yet, keep looping.
+      else
+        -- Legacy/MSPv1: pass-through as one 6B window.
+        return {
+          dataId        & 0xFF,
+          (dataId >> 8) & 0xFF,
+          value         & 0xFF,
+          (value >> 8)  & 0xFF,
+          (value >> 16) & 0xFF,
+          (value >> 24) & 0xFF
+        }
+      end
+    end
+
+    ::continue::
   end
 
+  -- Nothing suitable within our small slice; tell caller to poll again.
   return nil
 end
 
