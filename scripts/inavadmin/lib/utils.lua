@@ -330,7 +330,12 @@ function utils.joinTableItems(tbl, delimiter)
     return table.concat(padded, delimiter, sIdx, #tbl)
 end
 
-function utils.log(msg, level) if inavadmin.tasks and inavadmin.tasks.logger then inavadmin.tasks.logger.add(msg, level or "debug") end end
+function utils.log(msg, level) 
+    if inavadmin.preferences.developer.loglevel == "off" then 
+        return 
+    end    
+    if inavadmin.tasks and inavadmin.tasks.logger then inavadmin.tasks.logger.add(msg, level or "debug") end 
+end
 
 function utils.print_r(node, maxDepth, currentDepth)
     maxDepth = maxDepth or 5
