@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local arg = {...}
 local config = arg[1]
@@ -37,13 +37,13 @@ local supportedProtocols = {
 -- LuaFormatter on
 
 function protocol.getProtocol()
-    if inavadmin.session and inavadmin.session.telemetryType then if inavadmin.session.telemetryType == "crsf" then return supportedProtocols.crsf end end
+    if inavsuite.session and inavsuite.session.telemetryType then if inavsuite.session.telemetryType == "crsf" then return supportedProtocols.crsf end end
     return supportedProtocols.sport
 end
 
 function protocol.getTransports()
     local transport = {}
-    for i, v in pairs(supportedProtocols) do transport[i] = "SCRIPTS:/" .. inavadmin.config.baseDir .. "/tasks/msp/" .. v.mspTransport end
+    for i, v in pairs(supportedProtocols) do transport[i] = "SCRIPTS:/" .. inavsuite.config.baseDir .. "/tasks/msp/" .. v.mspTransport end
     return transport
 end
 

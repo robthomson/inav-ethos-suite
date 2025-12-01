@@ -3,13 +3,13 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local core = {}
 
-local mspHelper = inavadmin.tasks.msp.mspHelper
-local utils = inavadmin.utils
-local callback = inavadmin.tasks.callback
+local mspHelper = inavsuite.tasks.msp.mspHelper
+local utils = inavsuite.utils
+local callback = inavsuite.tasks.callback
 
 function core.scheduleWakeup(func)
     if callback and callback.now then
@@ -82,7 +82,7 @@ local function parseMSPChunk(buf, structure, state)
         local field = structure[state.index]
         state.index = state.index + 1
 
-        if field.apiVersion and inavadmin.utils.apiVersionCompare("<", field.apiVersion) then goto continue end
+        if field.apiVersion and inavsuite.utils.apiVersionCompare("<", field.apiVersion) then goto continue end
 
         local readFunction = mspHelper["read" .. field.type]
         if not readFunction then
@@ -125,7 +125,7 @@ function core.parseMSPData(API_NAME, buf, structure, processed, other, options)
                 local field = structure[state.index]
                 state.index = state.index + 1
 
-                if field.apiVersion and inavadmin.utils.apiVersionCompare("<", field.apiVersion) then goto continue end
+                if field.apiVersion and inavsuite.utils.apiVersionCompare("<", field.apiVersion) then goto continue end
 
                 local readFunction = mspHelper["read" .. field.type]
                 if not readFunction then
@@ -173,7 +173,7 @@ function core.parseMSPData(API_NAME, buf, structure, processed, other, options)
         local current_byte = 1
 
         for _, field in ipairs(structure) do
-            if field.apiVersion and inavadmin.utils.apiVersionCompare("<", field.apiVersion) then goto continue end
+            if field.apiVersion and inavsuite.utils.apiVersionCompare("<", field.apiVersion) then goto continue end
 
             local readFunction = mspHelper["read" .. field.type]
             if not readFunction then
@@ -212,7 +212,7 @@ function core.calculateMinBytes(structure)
     for _, param in ipairs(structure) do
         local insert_param = false
 
-        if not param.apiVersion or inavadmin.utils.apiVersionCompare(">=", param.apiVersion) then insert_param = true end
+        if not param.apiVersion or inavsuite.utils.apiVersionCompare(">=", param.apiVersion) then insert_param = true end
 
         if insert_param and (param.mandatory ~= false) then totalBytes = totalBytes + get_type_size(param.type) end
     end
@@ -226,7 +226,7 @@ function core.filterByApiVersion(structure)
     for _, param in ipairs(structure) do
         local insert_param = false
 
-        if not param.apiVersion or inavadmin.utils.apiVersionCompare(">=", param.apiVersion) then insert_param = true end
+        if not param.apiVersion or inavsuite.utils.apiVersionCompare(">=", param.apiVersion) then insert_param = true end
 
         if insert_param then table.insert(filteredStructure, param) end
     end
@@ -283,14 +283,14 @@ function core.createHandlers()
 end
 
 function core.buildWritePayload(apiname, payload, api_structure, noDelta)
-    if not inavadmin.app.Page then
+    if not inavsuite.app.Page then
         utils.log("[buildWritePayload] No page context available", "info")
         return nil
     end
 
-    local positionmap = inavadmin.tasks.msp.api.apidata.positionmap[apiname]
-    local receivedBytes = inavadmin.tasks.msp.api.apidata.receivedBytes[apiname]
-    local receivedBytesCount = inavadmin.tasks.msp.api.apidata.receivedBytesCount[apiname]
+    local positionmap = inavsuite.tasks.msp.api.apidata.positionmap[apiname]
+    local receivedBytes = inavsuite.tasks.msp.api.apidata.receivedBytes[apiname]
+    local receivedBytesCount = inavsuite.tasks.msp.api.apidata.receivedBytesCount[apiname]
 
     local useDelta = positionmap and receivedBytes and receivedBytesCount
 
@@ -309,8 +309,8 @@ function core.buildDeltaPayload(apiname, payload, api_structure, positionmap, re
     for i = 1, receivedBytesCount or 0 do byte_stream[i] = receivedBytes and receivedBytes[i] or 0 end
 
     local editableFields = {}
-    for idx, formField in ipairs(inavadmin.app.formFields) do
-        local pageField = inavadmin.app.Page.apidata.formdata.fields[idx]
+    for idx, formField in ipairs(inavsuite.app.formFields) do
+        local pageField = inavsuite.app.Page.apidata.formdata.fields[idx]
         if pageField and pageField.apikey then
             local key = pageField.apikey:match("([^%-]+)%-%>") or pageField.apikey
             editableFields[key] = true
@@ -318,13 +318,13 @@ function core.buildDeltaPayload(apiname, payload, api_structure, positionmap, re
     end
 
     local actual_fields = {}
-    if inavadmin.app.Page and inavadmin.app.Page.apidata then
-        for _, field in ipairs(inavadmin.app.Page.apidata.formdata.fields) do
+    if inavsuite.app.Page and inavsuite.app.Page.apidata then
+        for _, field in ipairs(inavsuite.app.Page.apidata.formdata.fields) do
 
             if field.api and not field.apikey then
                 local mspapi, apikey = string.match(field.api, "([^:]+):(.+)")
 
-                for i, api in ipairs(inavadmin.app.Page.apidata.api) do
+                for i, api in ipairs(inavsuite.app.Page.apidata.api) do
                     if api == mspapi then
                         mspapi = i
                         break
@@ -332,10 +332,10 @@ function core.buildDeltaPayload(apiname, payload, api_structure, positionmap, re
                 end
                 field.apikey = apikey
                 field.mspapi = mspapi
-                inavadmin.utils.log("[buildDeltaPayload] Converted api field '" .. field.api .. "' to mspapi=" .. tostring(mspapi) .. " apikey=" .. tostring(apikey), "info")
+                inavsuite.utils.log("[buildDeltaPayload] Converted api field '" .. field.api .. "' to mspapi=" .. tostring(mspapi) .. " apikey=" .. tostring(apikey), "info")
             end
             if not field.apikey then
-                inavadmin.utils.log("[buildDeltaPayload] Missing apikey for field: " .. tostring(field.api), "info")
+                inavsuite.utils.log("[buildDeltaPayload] Missing apikey for field: " .. tostring(field.api), "info")
             else
                 if not actual_fields[field.apikey] then actual_fields[field.apikey] = field end
             end
@@ -400,7 +400,7 @@ function core.buildFullPayload(apiname, payload, api_structure)
     utils.log("[buildFullPayload] Clearing byte stream for full rebuild", "debug")
 
     local actual_fields = {}
-    if inavadmin.app.Page and inavadmin.app.Page.apidata then for _, field in ipairs(inavadmin.app.Page.apidata.formdata.fields) do actual_fields[field.apikey] = field end end
+    if inavsuite.app.Page and inavsuite.app.Page.apidata then for _, field in ipairs(inavsuite.app.Page.apidata.formdata.fields) do actual_fields[field.apikey] = field end end
 
     for _, field_def in ipairs(api_structure) do
         local field_name = field_def.field
@@ -418,7 +418,7 @@ function core.buildFullPayload(apiname, payload, api_structure)
         local value = payload[field_name] or field_def.default or 0
         local scale = field_def.scale or 1
 
-        if not actual_field and field_def.decimals then scale = scale / inavadmin.app.utils.decimalInc(field_def.decimals) end
+        if not actual_field and field_def.decimals then scale = scale / inavsuite.app.utils.decimalInc(field_def.decimals) end
         value = math.floor(value * scale + 0.5)
 
         local writeFunction = mspHelper["write" .. field_def.type]
@@ -445,7 +445,7 @@ function core.prepareStructureData(structure)
     local simResponse = {}
 
     for _, param in ipairs(structure) do
-        if param.apiVersion and inavadmin.utils.apiVersionCompare("<", param.apiVersion) then goto continue end
+        if param.apiVersion and inavsuite.utils.apiVersionCompare("<", param.apiVersion) then goto continue end
 
         table.insert(filteredStructure, param)
 

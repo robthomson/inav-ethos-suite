@@ -3,13 +3,13 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local apiLoader = {}
 
 apiLoader._fileExistsCache = apiLoader._fileExistsCache or {}
 
-local apidir = "SCRIPTS:/" .. inavadmin.config.baseDir .. "/tasks/msp/api/"
+local apidir = "SCRIPTS:/" .. inavsuite.config.baseDir .. "/tasks/msp/api/"
 local api_path = apidir
 
 local firstLoadAPI = true
@@ -28,9 +28,9 @@ local function loadAPI(apiName)
     local apiFilePath = api_path .. apiName .. ".lua"
 
     if firstLoadAPI then
-        mspHelper = inavadmin.tasks.msp.mspHelper
-        utils = inavadmin.utils
-        callback = inavadmin.tasks.callback
+        mspHelper = inavsuite.tasks.msp.mspHelper
+        utils = inavsuite.utils
+        callback = inavsuite.tasks.callback
         firstLoadAPI = false
     end
 

@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local utils = {}
 
@@ -11,7 +11,7 @@ local arg = {...}
 local config = arg[1]
 
 function utils.session()
-    inavadmin.session = {
+    inavsuite.session = {
 
         tailMode = nil,
         swashMode = nil,
@@ -77,18 +77,18 @@ function utils.session()
 end
 
 function utils.rxmapReady()
-    if inavadmin.session.rx and inavadmin.session.rx.map and (inavadmin.session.rx.map.collective or inavadmin.session.rx.map.elevator or inavadmin.session.rx.map.throttle or inavadmin.session.rx.map.rudder) then return true end
+    if inavsuite.session.rx and inavsuite.session.rx.map and (inavsuite.session.rx.map.collective or inavsuite.session.rx.map.elevator or inavsuite.session.rx.map.throttle or inavsuite.session.rx.map.rudder) then return true end
     return false
 end
 
 function utils.inFlight()
-    if inavadmin.flightmode.current == "inflight" then return true end
+    if inavsuite.flightmode.current == "inflight" then return true end
     return false
 end
 
 function utils.msp_version_array_to_indexed()
     local arr = {}
-    local tbl = inavadmin.config.supportedMspApiVersion or {"2.04", "2.05"}
+    local tbl = inavsuite.config.supportedMspApiVersion or {"2.04", "2.05"}
     for i, v in ipairs(tbl) do arr[#arr + 1] = {v, i} end
     return arr
 end
@@ -142,7 +142,7 @@ end
 function utils.getGovernorState(value)
     local returnvalue
 
-    if not inavadmin.tasks.telemetry then return "@i18n(widgets.governor.UNKNOWN)@" end
+    if not inavsuite.tasks.telemetry then return "@i18n(widgets.governor.UNKNOWN)@" end
 
     local map = {
         [0] = "@i18n(widgets.governor.OFF):upper()@",
@@ -158,8 +158,8 @@ function utils.getGovernorState(value)
         [101] = "@i18n(widgets.governor.DISARMED):upper()@"
     }
 
-    if inavadmin.session and inavadmin.session.apiVersion and inavadmin.utils.apiVersionCompare(">", "12.07") then
-        local armflags = inavadmin.tasks.telemetry.getSensor("armflags")
+    if inavsuite.session and inavsuite.session.apiVersion and inavsuite.utils.apiVersionCompare(">", "12.07") then
+        local armflags = inavsuite.tasks.telemetry.getSensor("armflags")
         if armflags == 0 or armflags == 2 then value = 101 end
     end
 
@@ -169,7 +169,7 @@ function utils.getGovernorState(value)
         returnvalue = "@i18n(widgets.governor.UNKNOWN):upper()@"
     end
 
-    local armdisableflags = inavadmin.tasks.telemetry.getSensor("armdisableflags")
+    local armdisableflags = inavsuite.tasks.telemetry.getSensor("armdisableflags")
     if armdisableflags ~= nil then
         armdisableflags = math.floor(armdisableflags)
         local armstring = utils.armingDisableFlagsToString(armdisableflags)
@@ -186,7 +186,7 @@ function utils.createCacheFile(tbl, path, options)
 
     local f, err = io.open(path, "w")
     if not f then
-        inavadmin.utils.log("Error creating cache file: " .. err, "info")
+        inavsuite.utils.log("Error creating cache file: " .. err, "info")
         return
     end
 
@@ -260,14 +260,14 @@ function utils.playFile(pkg, file)
 
     if av:sub(1, 1) == "/" then av = av:sub(2) end
 
-    local wavUser = "SCRIPTS:/inavadmin.user/audio/user/" .. pkg .. "/" .. file
-    local wavLocale = "SCRIPTS:/inavadmin.user/audio/" .. av .. "/" .. pkg .. "/" .. file
-    local wavDefault = "SCRIPTS:/inavadmin/audio/en/default/" .. pkg .. "/" .. file
+    local wavUser = "SCRIPTS:/inavsuite.user/audio/user/" .. pkg .. "/" .. file
+    local wavLocale = "SCRIPTS:/inavsuite.user/audio/" .. av .. "/" .. pkg .. "/" .. file
+    local wavDefault = "SCRIPTS:/inavsuite/audio/en/default/" .. pkg .. "/" .. file
 
     local path
-    if inavadmin.utils.file_exists(wavUser) then
+    if inavsuite.utils.file_exists(wavUser) then
         path = wavUser
-    elseif inavadmin.utils.file_exists(wavLocale) then
+    elseif inavsuite.utils.file_exists(wavLocale) then
         path = wavLocale
     else
         path = wavDefault
@@ -283,14 +283,14 @@ function utils.ethosVersionAtLeast(targetVersion)
     local currentVersion = {env.major, env.minor, env.revision}
 
     if targetVersion == nil then
-        if inavadmin and inavadmin.config and inavadmin.config.ethosVersion then
-            targetVersion = inavadmin.config.ethosVersion
+        if inavsuite and inavsuite.config and inavsuite.config.ethosVersion then
+            targetVersion = inavsuite.config.ethosVersion
         else
 
             return false
         end
     elseif type(targetVersion) == "number" then
-        inavadmin.utils.log("WARNING: utils.ethosVersionAtLeast() called with a number instead of a table (" .. targetVersion .. ")", 2)
+        inavsuite.utils.log("WARNING: utils.ethosVersionAtLeast() called with a number instead of a table (" .. targetVersion .. ")", 2)
         return false
     end
 
@@ -332,10 +332,10 @@ function utils.joinTableItems(tbl, delimiter)
 end
 
 function utils.log(msg, level) 
-    if inavadmin.preferences.developer.loglevel == "off" then 
+    if inavsuite.preferences.developer.loglevel == "off" then 
         return 
     end    
-    if inavadmin.tasks and inavadmin.tasks.logger then inavadmin.tasks.logger.add(msg, level or "debug") end 
+    if inavsuite.tasks and inavsuite.tasks.logger then inavsuite.tasks.logger.add(msg, level or "debug") end 
 end
 
 function utils.print_r(node, maxDepth, currentDepth)
@@ -378,15 +378,15 @@ function utils.findModules()
 
             local func, err = loadfile(init_path)
             if not func then
-                inavadmin.utils.log("Failed to load module init " .. init_path .. ": " .. err, "info")
+                inavsuite.utils.log("Failed to load module init " .. init_path .. ": " .. err, "info")
             else
                 local ok, mconfig = pcall(func)
                 if not ok then
-                    inavadmin.utils.log("Error executing " .. init_path .. ": " .. mconfig, "info")
+                    inavsuite.utils.log("Error executing " .. init_path .. ": " .. mconfig, "info")
                 elseif type(mconfig) ~= "table" or not mconfig.script then
-                    inavadmin.utils.log("Invalid configuration in " .. init_path, "info")
+                    inavsuite.utils.log("Invalid configuration in " .. init_path, "info")
                 else
-                    inavadmin.utils.log("Loading module " .. v, "debug")
+                    inavsuite.utils.log("Loading module " .. v, "debug")
                     mconfig.folder = v
                     table.insert(modulesList, mconfig)
                 end
@@ -408,13 +408,13 @@ function utils.findWidgets()
 
             local func, err = loadfile(init_path)
             if not func then
-                inavadmin.utils.log("Failed to load widget init " .. init_path .. ": " .. err, "debug")
+                inavsuite.utils.log("Failed to load widget init " .. init_path .. ": " .. err, "debug")
             else
                 local ok, wconfig = pcall(func)
                 if not ok then
-                    inavadmin.utils.log("Error executing widget init " .. init_path .. ": " .. wconfig, "debug")
+                    inavsuite.utils.log("Error executing widget init " .. init_path .. ": " .. wconfig, "debug")
                 elseif type(wconfig) ~= "table" or not wconfig.key then
-                    inavadmin.utils.log("Invalid configuration in " .. init_path, "debug")
+                    inavsuite.utils.log("Invalid configuration in " .. init_path, "debug")
                 else
                     wconfig.folder = v
                     table.insert(widgetsList, wconfig)
@@ -438,7 +438,7 @@ function utils.loadImage(image1, image2, image3)
         local path = utils._imagePathCache[key]
         if not path then
             for _, p in ipairs(tryPaths) do
-                if inavadmin.utils.file_exists(p) then
+                if inavsuite.utils.file_exists(p) then
                     path = p
                     break
                 end
@@ -468,8 +468,8 @@ end
 
 function utils.simSensors(id)
     os.mkdir("LOGS:")
-    os.mkdir("LOGS:/inavadmin")
-    os.mkdir("LOGS:/inavadmin/sensors")
+    os.mkdir("LOGS:/inavsuite")
+    os.mkdir("LOGS:/inavsuite/sensors")
 
     if id == nil then return 0 end
 
@@ -491,29 +491,29 @@ function utils.simSensors(id)
 end
 
 function utils.logMsp(cmd, rwState, buf, err)
-    if inavadmin.preferences.developer.logmsp then
-        local payload = inavadmin.utils.joinTableItems(buf, ", ")
-        inavadmin.utils.log(rwState .. " [" .. cmd .. "]{" .. payload .. "}", "info")
-        if err then inavadmin.utils.log("Error: " .. err, "info") end
+    if inavsuite.preferences.developer.logmsp then
+        local payload = inavsuite.utils.joinTableItems(buf, ", ")
+        inavsuite.utils.log(rwState .. " [" .. cmd .. "]{" .. payload .. "}", "info")
+        if err then inavsuite.utils.log("Error: " .. err, "info") end
     end
 end
 
 utils._memProfile = utils._memProfile or {}
 
 function utils.reportMemoryUsage(location, phase)
-    if not inavadmin.preferences.developer.memstats then return end
+    if not inavsuite.preferences.developer.memstats then return end
     location = location or "Unknown"
 
-    local cpuInfo = (inavadmin.performance and inavadmin.performance.cpuload) or 0
-    local ramFree = (inavadmin.performance and inavadmin.performance.freeram) or 0
-    local ramUsed = (inavadmin.performance and inavadmin.performance.usedram) or 0
+    local cpuInfo = (inavsuite.performance and inavsuite.performance.cpuload) or 0
+    local ramFree = (inavsuite.performance and inavsuite.performance.freeram) or 0
+    local ramUsed = (inavsuite.performance and inavsuite.performance.usedram) or 0
     local memInfo = system.getMemoryUsage() or {}
 
     local snapshot = {cpu = cpuInfo, free = ramFree, used = ramUsed, main = (memInfo.mainStackAvailable or 0) / 1024, ram = (memInfo.ramAvailable or 0) / 1024, lua = (memInfo.luaRamAvailable or 0) / 1024, bmp = (memInfo.luaBitmapsRamAvailable or 0) / 1024, time = os.clock()}
 
     if phase == "start" then
         utils._memProfile[location] = snapshot
-        inavadmin.utils.log(string.format("[%s] Profiling started", location), "info")
+        inavsuite.utils.log(string.format("[%s] Profiling started", location), "info")
         return
     elseif phase == "end" then
         local startSnap = utils._memProfile[location]
@@ -531,21 +531,21 @@ function utils.reportMemoryUsage(location, phase)
         return
     end
 
-    inavadmin.utils.log(string.format("[%s] CPU Load: %d%%", location, inavadmin.utils.round(snapshot.cpu, 0)), "info")
-    inavadmin.utils.log(string.format("[%s] RAM Free: %d kB", location, inavadmin.utils.round(snapshot.free, 0)), "info")
-    inavadmin.utils.log(string.format("[%s] RAM Used: %d kB", location, inavadmin.utils.round(snapshot.used, 0)), "info")
-    inavadmin.utils.log(string.format("[%s] Main stack available: %.2f KB", location, snapshot.main), "info")
-    inavadmin.utils.log(string.format("[%s] System RAM available: %.2f KB", location, snapshot.ram), "info")
-    inavadmin.utils.log(string.format("[%s] Lua RAM available: %.2f KB", location, snapshot.lua), "info")
-    inavadmin.utils.log(string.format("[%s] Lua Bitmap RAM available: %.2f KB", location, snapshot.bmp), "info")
+    inavsuite.utils.log(string.format("[%s] CPU Load: %d%%", location, inavsuite.utils.round(snapshot.cpu, 0)), "info")
+    inavsuite.utils.log(string.format("[%s] RAM Free: %d kB", location, inavsuite.utils.round(snapshot.free, 0)), "info")
+    inavsuite.utils.log(string.format("[%s] RAM Used: %d kB", location, inavsuite.utils.round(snapshot.used, 0)), "info")
+    inavsuite.utils.log(string.format("[%s] Main stack available: %.2f KB", location, snapshot.main), "info")
+    inavsuite.utils.log(string.format("[%s] System RAM available: %.2f KB", location, snapshot.ram), "info")
+    inavsuite.utils.log(string.format("[%s] Lua RAM available: %.2f KB", location, snapshot.lua), "info")
+    inavsuite.utils.log(string.format("[%s] Lua Bitmap RAM available: %.2f KB", location, snapshot.bmp), "info")
 end
 
 function utils.onReboot()
-    inavadmin.utils.log("utils.onReboot called", "info")
-    inavadmin.session.resetSensors = true
-    inavadmin.session.resetTelemetry = true
-    inavadmin.session.resetMSP = true
-    inavadmin.session.resetMSPSensors = true
+    inavsuite.utils.log("utils.onReboot called", "info")
+    inavsuite.session.resetSensors = true
+    inavsuite.session.resetTelemetry = true
+    inavsuite.session.resetMSP = true
+    inavsuite.session.resetMSPSensors = true
 end
 
 function utils.splitVersionStringToNumbers(versionString)
@@ -570,7 +570,7 @@ function utils.apiVersionCompare(op, req)
         return t
     end
 
-    local a, b = parts(inavadmin.session.apiVersion or 2.04), parts(req)
+    local a, b = parts(inavsuite.session.apiVersion or 2.04), parts(req)
     if #a == 0 or #b == 0 then return false end
 
     local len = math.max(#a, #b)
@@ -595,8 +595,8 @@ function utils.apiVersionCompare(op, req)
 end
 
 function utils.muteSensorLostWarnings()
-    if inavadmin.session.telemetryModule then
-        local module = inavadmin.session.telemetryModule
+    if inavsuite.session.telemetryModule then
+        local module = inavsuite.session.telemetryModule
         if module and module.muteSensorLost then module:muteSensorLost(2.0) end
     end
 end

@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local activateWakeup = false
 
@@ -46,38 +46,38 @@ local apidata = {
 }
 
 local function postLoad(self)
-    inavadmin.app.triggers.closeProgressLoader = true
+    inavsuite.app.triggers.closeProgressLoader = true
     activateWakeup = true
 end
 
 local function openPage(idx, title, script)
-    inavadmin.app.uiState = inavadmin.app.uiStatus.pages
-    inavadmin.app.triggers.isReady = false
+    inavsuite.app.uiState = inavsuite.app.uiStatus.pages
+    inavsuite.app.triggers.isReady = false
 
-    inavadmin.app.Page = assert(loadfile("app/modules/" .. script))()
+    inavsuite.app.Page = assert(loadfile("app/modules/" .. script))()
 
-    inavadmin.app.lastIdx = idx
-    inavadmin.app.lastTitle = title
-    inavadmin.app.lastScript = script
-    inavadmin.session.lastPage = script
+    inavsuite.app.lastIdx = idx
+    inavsuite.app.lastTitle = title
+    inavsuite.app.lastScript = script
+    inavsuite.session.lastPage = script
 
-    inavadmin.app.uiState = inavadmin.app.uiStatus.pages
+    inavsuite.app.uiState = inavsuite.app.uiStatus.pages
 
     local longPage = false
 
     form.clear()
 
-    inavadmin.app.ui.fieldHeader(title)
+    inavsuite.app.ui.fieldHeader(title)
     local numCols
-    if inavadmin.app.Page.apidata.formdata.cols ~= nil then
-        numCols = #inavadmin.app.Page.apidata.formdata.cols
+    if inavsuite.app.Page.apidata.formdata.cols ~= nil then
+        numCols = #inavsuite.app.Page.apidata.formdata.cols
     else
         numCols = 6
     end
-    local screenWidth = inavadmin.app.lcdWidth - 10
+    local screenWidth = inavsuite.app.lcdWidth - 10
     local padding = 10
-    local paddingTop = inavadmin.app.radio.linePaddingTop
-    local h = inavadmin.app.radio.navbuttonHeight
+    local paddingTop = inavsuite.app.radio.linePaddingTop
+    local h = inavsuite.app.radio.navbuttonHeight
     local w = ((screenWidth * 70 / 100) / numCols)
     local paddingRight = 20
     local positions = {}
@@ -92,7 +92,7 @@ local function openPage(idx, title, script)
 
     local c = 1
     while loc > 0 do
-        local colLabel = inavadmin.app.Page.apidata.formdata.cols[loc]
+        local colLabel = inavsuite.app.Page.apidata.formdata.cols[loc]
         pos = {x = posX, y = posY, w = w, h = h}
         form.addStaticText(line, pos, colLabel)
         positions[loc] = posX - w + paddingRight
@@ -103,11 +103,11 @@ local function openPage(idx, title, script)
     end
 
     local pidRows = {}
-    for ri, rv in ipairs(inavadmin.app.Page.apidata.formdata.rows) do pidRows[ri] = form.addLine(rv) end
+    for ri, rv in ipairs(inavsuite.app.Page.apidata.formdata.rows) do pidRows[ri] = form.addLine(rv) end
 
-    for i = 1, #inavadmin.app.Page.apidata.formdata.fields do
-        local f = inavadmin.app.Page.apidata.formdata.fields[i]
-        local l = inavadmin.app.Page.apidata.formdata.labels
+    for i = 1, #inavsuite.app.Page.apidata.formdata.fields do
+        local f = inavsuite.app.Page.apidata.formdata.fields[i]
+        local l = inavsuite.app.Page.apidata.formdata.labels
         local pageIdx = i
         local currentField = i
 
@@ -115,24 +115,24 @@ local function openPage(idx, title, script)
 
         pos = {x = posX + padding, y = posY, w = w - padding, h = h}
 
-        inavadmin.app.formFields[i] = form.addNumberField(pidRows[f.row], pos, 0, 0, function()
-            if inavadmin.app.Page.apidata.formdata.fields == nil or inavadmin.app.Page.apidata.formdata.fields[i] == nil then
+        inavsuite.app.formFields[i] = form.addNumberField(pidRows[f.row], pos, 0, 0, function()
+            if inavsuite.app.Page.apidata.formdata.fields == nil or inavsuite.app.Page.apidata.formdata.fields[i] == nil then
                 ui.disableAllFields()
                 ui.disableAllNavigationFields()
                 ui.enableNavigationField('menu')
                 return nil
             end
-            return inavadmin.app.utils.getFieldValue(inavadmin.app.Page.apidata.formdata.fields[i])
+            return inavsuite.app.utils.getFieldValue(inavsuite.app.Page.apidata.formdata.fields[i])
         end, function(value)
-            if f.postEdit then f.postEdit(inavadmin.app.Page) end
-            if f.onChange then f.onChange(inavadmin.app.Page) end
+            if f.postEdit then f.postEdit(inavsuite.app.Page) end
+            if f.onChange then f.onChange(inavsuite.app.Page) end
 
-            f.value = inavadmin.app.utils.saveFieldValue(inavadmin.app.Page.apidata.formdata.fields[i], value)
+            f.value = inavsuite.app.utils.saveFieldValue(inavsuite.app.Page.apidata.formdata.fields[i], value)
         end)
     end
 
 end
 
-local function wakeup() if activateWakeup == true and inavadmin.tasks.msp.mspQueue:isProcessed() then if inavadmin.session.activeProfile ~= nil then inavadmin.app.formFields['title']:value(inavadmin.app.Page.title .. " #" .. inavadmin.session.activeProfile) end end end
+local function wakeup() if activateWakeup == true and inavsuite.tasks.msp.mspQueue:isProcessed() then if inavsuite.session.activeProfile ~= nil then inavsuite.app.formFields['title']:value(inavsuite.app.Page.title .. " #" .. inavsuite.session.activeProfile) end end end
 
 return {apidata = apidata, title = "@i18n(app.modules.pids.name)@", reboot = false, eepromWrite = true, refreshOnProfileChange = true, postLoad = postLoad, openPage = openPage, wakeup = wakeup, API = {}}

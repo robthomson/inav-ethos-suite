@@ -3,8 +3,8 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
-local core = assert(loadfile("SCRIPTS:/" .. inavadmin.config.baseDir .. "/tasks/msp/api_core.lua"))()
+local inavsuite = require("inavsuite")
+local core = assert(loadfile("SCRIPTS:/" .. inavsuite.config.baseDir .. "/tasks/msp/api_core.lua"))()
 
 local API_NAME = "REBOOT"
 local MSP_API_CMD_READ = nil
@@ -70,28 +70,28 @@ end
 
 local function read()
     if MSP_API_CMD_READ == nil then
-        inavadmin.utils.log("No value set for MSP_API_CMD_READ", "debug")
+        inavsuite.utils.log("No value set for MSP_API_CMD_READ", "debug")
         return
     end
 
     local message = {command = MSP_API_CMD_READ, structure = MSP_API_STRUCTURE_READ, minBytes = MSP_MIN_BYTES, processReply = processReplyStaticRead, errorHandler = errorHandlerStatic, simulatorResponse = MSP_API_SIMULATOR_RESPONSE, uuid = MSP_API_UUID, timeout = MSP_API_MSG_TIMEOUT, getCompleteHandler = handlers.getCompleteHandler, getErrorHandler = handlers.getErrorHandler, mspData = nil}
-    inavadmin.tasks.msp.mspQueue:add(message)
+    inavsuite.tasks.msp.mspQueue:add(message)
 end
 
 local function write(suppliedPayload)
     if MSP_API_CMD_WRITE == nil then
-        inavadmin.utils.log("No value set for MSP_API_CMD_WRITE", "debug")
+        inavsuite.utils.log("No value set for MSP_API_CMD_WRITE", "debug")
         return
     end
 
     local payload = suppliedPayload or core.buildWritePayload(API_NAME, payloadData, MSP_API_STRUCTURE_WRITE, MSP_REBUILD_ON_WRITE)
 
-    local uuid = MSP_API_UUID or inavadmin.utils and inavadmin.utils.uuid and inavadmin.utils.uuid() or tostring(os.clock())
+    local uuid = MSP_API_UUID or inavsuite.utils and inavsuite.utils.uuid and inavsuite.utils.uuid() or tostring(os.clock())
     lastWriteUUID = uuid
 
     local message = {command = MSP_API_CMD_WRITE, payload = payload, processReply = processReplyStaticWrite, errorHandler = errorHandlerStatic, simulatorResponse = {}, uuid = uuid, timeout = MSP_API_MSG_TIMEOUT, getCompleteHandler = handlers.getCompleteHandler, getErrorHandler = handlers.getErrorHandler}
 
-    inavadmin.tasks.msp.mspQueue:add(message)
+    inavsuite.tasks.msp.mspQueue:add(message)
 end
 
 local function readValue(fieldName)

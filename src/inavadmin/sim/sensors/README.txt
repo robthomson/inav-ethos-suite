@@ -25,11 +25,11 @@ if you do not have an external simtelemetry folder
 If you want the ability to dynamically change sensors - you can copy the
 contents of this folder to:
 
-/scripts/inavadmin.sim/sensors/
+/scripts/inavsuite.sim/sensors/
 
 you would expect for example to see:
 
-/scripts/inavadmin.sim/sensors/voltage.lua
+/scripts/inavsuite.sim/sensors/voltage.lua
 etc..
 
 If the file does not load.. you get the one in this folder instead!

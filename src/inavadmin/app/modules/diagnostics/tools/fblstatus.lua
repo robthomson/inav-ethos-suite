@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local fields = {}
 local labels = {}
@@ -24,7 +24,7 @@ local buttonW = 100
 local buttonWs = buttonW - (buttonW * 20) / 100
 local x = w - 15
 
-local displayPos = {x = x - buttonW - buttonWs - 5 - buttonWs, y = inavadmin.app.radio.linePaddingTop, w = 200, h = inavadmin.app.radio.navbuttonHeight}
+local displayPos = {x = x - buttonW - buttonWs - 5 - buttonWs, y = inavsuite.app.radio.linePaddingTop, w = 200, h = inavsuite.app.radio.navbuttonHeight}
 
 local apidata = {
     api = {[1] = nil},
@@ -59,25 +59,25 @@ local function getFblTime()
         processReply = function(self, buf)
 
             buf.offset = 1
-            status.fblYear = inavadmin.tasks.msp.mspHelper.readU16(buf)
+            status.fblYear = inavsuite.tasks.msp.mspHelper.readU16(buf)
             buf.offset = 3
-            status.fblMonth = inavadmin.tasks.msp.mspHelper.readU8(buf)
+            status.fblMonth = inavsuite.tasks.msp.mspHelper.readU8(buf)
             buf.offset = 4
-            status.fblDay = inavadmin.tasks.msp.mspHelper.readU8(buf)
+            status.fblDay = inavsuite.tasks.msp.mspHelper.readU8(buf)
             buf.offset = 5
-            status.fblHour = inavadmin.tasks.msp.mspHelper.readU8(buf)
+            status.fblHour = inavsuite.tasks.msp.mspHelper.readU8(buf)
             buf.offset = 6
-            status.fblMinute = inavadmin.tasks.msp.mspHelper.readU8(buf)
+            status.fblMinute = inavsuite.tasks.msp.mspHelper.readU8(buf)
             buf.offset = 7
-            status.fblSecond = inavadmin.tasks.msp.mspHelper.readU8(buf)
+            status.fblSecond = inavsuite.tasks.msp.mspHelper.readU8(buf)
             buf.offset = 8
-            status.fblMillis = inavadmin.tasks.msp.mspHelper.readU16(buf)
+            status.fblMillis = inavsuite.tasks.msp.mspHelper.readU16(buf)
 
         end,
         simulatorResponse = getSimulatorTimeResponse()
     }
 
-    inavadmin.tasks.msp.mspQueue:add(message)
+    inavsuite.tasks.msp.mspQueue:add(message)
 end
 
 local function getStatus()
@@ -86,20 +86,20 @@ local function getStatus()
         processReply = function(self, buf)
 
             buf.offset = 12
-            status.realTimeLoad = inavadmin.tasks.msp.mspHelper.readU16(buf)
-            status.cpuLoad = inavadmin.tasks.msp.mspHelper.readU16(buf)
+            status.realTimeLoad = inavsuite.tasks.msp.mspHelper.readU16(buf)
+            status.cpuLoad = inavsuite.tasks.msp.mspHelper.readU16(buf)
             buf.offset = 18
-            status.armingDisableFlags = inavadmin.tasks.msp.mspHelper.readU32(buf)
+            status.armingDisableFlags = inavsuite.tasks.msp.mspHelper.readU32(buf)
             buf.offset = 24
-            status.profile = inavadmin.tasks.msp.mspHelper.readU8(buf)
+            status.profile = inavsuite.tasks.msp.mspHelper.readU8(buf)
             buf.offset = 26
-            status.rateProfile = inavadmin.tasks.msp.mspHelper.readU8(buf)
+            status.rateProfile = inavsuite.tasks.msp.mspHelper.readU8(buf)
 
         end,
         simulatorResponse = {240, 1, 124, 0, 35, 0, 0, 0, 0, 0, 0, 224, 1, 10, 1, 0, 26, 0, 0, 0, 0, 0, 2, 0, 6, 0, 6, 1, 4, 1}
     }
 
-    inavadmin.tasks.msp.mspQueue:add(message)
+    inavsuite.tasks.msp.mspQueue:add(message)
 end
 
 local function getDataflashSummary()
@@ -107,17 +107,17 @@ local function getDataflashSummary()
         command = 70,
         processReply = function(self, buf)
 
-            local flags = inavadmin.tasks.msp.mspHelper.readU8(buf)
+            local flags = inavsuite.tasks.msp.mspHelper.readU8(buf)
             summary.ready = (flags & 1) ~= 0
             summary.supported = (flags & 2) ~= 0
-            summary.sectors = inavadmin.tasks.msp.mspHelper.readU32(buf)
-            summary.totalSize = inavadmin.tasks.msp.mspHelper.readU32(buf)
-            summary.usedSize = inavadmin.tasks.msp.mspHelper.readU32(buf)
+            summary.sectors = inavsuite.tasks.msp.mspHelper.readU32(buf)
+            summary.totalSize = inavsuite.tasks.msp.mspHelper.readU32(buf)
+            summary.usedSize = inavsuite.tasks.msp.mspHelper.readU32(buf)
 
         end,
         simulatorResponse = {3, 1, 0, 0, 0, 0, 4, 0, 0, 0, 3, 0, 0}
     }
-    inavadmin.tasks.msp.mspQueue:add(message)
+    inavsuite.tasks.msp.mspQueue:add(message)
 end
 
 local function eraseDataflash()
@@ -127,16 +127,16 @@ local function eraseDataflash()
 
             summary = {}
 
-            inavadmin.app.formFields[1]:value("")
-            inavadmin.app.formFields[2]:value("")
-            inavadmin.app.formFields[3]:value("")
-            inavadmin.app.formFields[4]:value("")
-            inavadmin.app.formFields[5]:value("")
-            inavadmin.app.formFields[6]:value("")
+            inavsuite.app.formFields[1]:value("")
+            inavsuite.app.formFields[2]:value("")
+            inavsuite.app.formFields[3]:value("")
+            inavsuite.app.formFields[4]:value("")
+            inavsuite.app.formFields[5]:value("")
+            inavsuite.app.formFields[6]:value("")
         end,
         simulatorResponse = {}
     }
-    inavadmin.tasks.msp.mspQueue:add(message)
+    inavsuite.tasks.msp.mspQueue:add(message)
 end
 
 local function postLoad(self)
@@ -144,13 +144,13 @@ local function postLoad(self)
     getStatus()
     getDataflashSummary()
     getFblTime()
-    inavadmin.app.triggers.isReady = true
+    inavsuite.app.triggers.isReady = true
     enableWakeup = true
 
-    inavadmin.app.triggers.closeProgressLoader = true
+    inavsuite.app.triggers.closeProgressLoader = true
 end
 
-local function postRead(self) inavadmin.utils.log("postRead", "debug") end
+local function postRead(self) inavsuite.utils.log("postRead", "debug") end
 
 local function getFreeDataflashSpace()
     if not summary.supported then return "@i18n(app.modules.fblstatus.unsupported)@" end
@@ -163,12 +163,12 @@ local function wakeup()
     if enableWakeup == false then return end
 
     if triggerEraseDataFlash == true then
-        inavadmin.app.audio.playEraseFlash = true
+        inavsuite.app.audio.playEraseFlash = true
         triggerEraseDataFlash = false
 
-        inavadmin.app.ui.progressDisplay("@i18n(app.modules.fblstatus.erasing)@", "@i18n(app.modules.fblstatus.erasing_dataflash)@")
-        inavadmin.app.Page.eraseDataflash()
-        inavadmin.app.triggers.isReady = true
+        inavsuite.app.ui.progressDisplay("@i18n(app.modules.fblstatus.erasing)@", "@i18n(app.modules.fblstatus.erasing_dataflash)@")
+        inavsuite.app.Page.eraseDataflash()
+        inavsuite.app.triggers.isReady = true
     end
 
     if triggerEraseDataFlash == false then
@@ -176,7 +176,7 @@ local function wakeup()
         if (now - wakeupScheduler) >= 2 then
             wakeupScheduler = now
             firstRun = false
-            if inavadmin.tasks.msp.mspQueue:isProcessed() then
+            if inavsuite.tasks.msp.mspQueue:isProcessed() then
 
                 getStatus()
                 getDataflashSummary()
@@ -184,38 +184,38 @@ local function wakeup()
 
                 if status.fblYear ~= nil and status.fblMonth ~= nil and status.fblDay ~= nil then
                     local value = string.format("%04d-%02d-%02d", status.fblYear, status.fblMonth, status.fblDay)
-                    inavadmin.app.formFields[1]:value(value)
+                    inavsuite.app.formFields[1]:value(value)
                 end
 
                 if status.fblHour ~= nil and status.fblMinute ~= nil and status.fblSecond ~= nil then
                     local value = string.format("%02d:%02d:%02d", status.fblHour, status.fblMinute, status.fblSecond)
-                    inavadmin.app.formFields[2]:value(value)
+                    inavsuite.app.formFields[2]:value(value)
                 end
 
                 if status.armingDisableFlags ~= nil then
-                    local value = inavadmin.utils.armingDisableFlagsToString(status.armingDisableFlags)
-                    inavadmin.app.formFields[3]:value(value)
+                    local value = inavsuite.utils.armingDisableFlagsToString(status.armingDisableFlags)
+                    inavsuite.app.formFields[3]:value(value)
                 end
 
                 if summary.supported == true then
                     local value = getFreeDataflashSpace()
-                    inavadmin.app.formFields[4]:value(value)
+                    inavsuite.app.formFields[4]:value(value)
                 end
 
                 if status.realTimeLoad ~= nil then
                     local value = math.floor(status.realTimeLoad / 10)
-                    inavadmin.app.formFields[5]:value(tostring(value) .. "%")
-                    if value >= 60 then inavadmin.app.formFields[4]:color(RED) end
+                    inavsuite.app.formFields[5]:value(tostring(value) .. "%")
+                    if value >= 60 then inavsuite.app.formFields[4]:color(RED) end
                 end
                 if status.cpuLoad ~= nil then
                     local value = status.cpuLoad / 10
-                    inavadmin.app.formFields[6]:value(tostring(value) .. "%")
-                    if value >= 60 then inavadmin.app.formFields[4]:color(RED) end
+                    inavsuite.app.formFields[6]:value(tostring(value) .. "%")
+                    if value >= 60 then inavsuite.app.formFields[4]:color(RED) end
                 end
 
             end
         end
-        if (now - wakeupScheduler) >= 1 then inavadmin.app.triggers.closeProgressLoader = true end
+        if (now - wakeupScheduler) >= 1 then inavsuite.app.triggers.closeProgressLoader = true end
     end
 
 end
@@ -245,14 +245,14 @@ end
 local function event(widget, category, value, x, y)
 
     if category == EVT_CLOSE and value == 0 or value == 35 then
-        inavadmin.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
+        inavsuite.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
         return true
     end
 end
 
 local function onNavMenu()
-    inavadmin.app.ui.progressDisplay(nil, nil, true)
-    inavadmin.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
+    inavsuite.app.ui.progressDisplay(nil, nil, true)
+    inavsuite.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
 end
 
 return {apidata = apidata, reboot = false, eepromWrite = false, minBytes = 0, wakeup = wakeup, refreshswitch = false, simulatorResponse = {}, postLoad = postLoad, postRead = postRead, eraseDataflash = eraseDataflash, onToolMenu = onToolMenu, onNavMenu = onNavMenu, event = event, navButtons = {menu = true, save = false, reload = false, tool = true, help = false}, API = {}}

@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local tasks = {}
 local tasksList = {}
@@ -23,10 +23,10 @@ local BASE_PATH = "tasks/onconnect/tasks/"
 local PRIORITY_LEVELS = {"high", "medium", "low"}
 
 local function resetSessionFlags()
-    inavadmin.session.onConnect = inavadmin.session.onConnect or {}
-    for _, level in ipairs(PRIORITY_LEVELS) do inavadmin.session.onConnect[level] = false end
+    inavsuite.session.onConnect = inavsuite.session.onConnect or {}
+    for _, level in ipairs(PRIORITY_LEVELS) do inavsuite.session.onConnect[level] = false end
 
-    inavadmin.session.isConnected = false
+    inavsuite.session.isConnected = false
 end
 
 function tasks.findTasks()
@@ -43,13 +43,13 @@ function tasks.findTasks()
                 local name = level .. "/" .. file:gsub("%.lua$", "")
                 local chunk, err = loadfile(fullPath)
                 if not chunk then
-                    inavadmin.utils.log("Error loading task " .. fullPath .. ": " .. err, "error")
+                    inavsuite.utils.log("Error loading task " .. fullPath .. ": " .. err, "error")
                 else
                     local module = assert(chunk())
                     if type(module) == "table" and type(module.wakeup) == "function" then
                         tasksList[name] = {module = module, priority = level, initialized = false, complete = false, failed = false, attempts = 0, nextEligibleAt = 0, startTime = nil}
                     else
-                        inavadmin.utils.log("Invalid task file: " .. fullPath, "info")
+                        inavsuite.utils.log("Invalid task file: " .. fullPath, "info")
                     end
                 end
             end
@@ -71,12 +71,12 @@ function tasks.resetAllTasks()
     end
 
     resetSessionFlags()
-    inavadmin.tasks.reset()
-    inavadmin.session.resetMSPSensors = true
+    inavsuite.tasks.reset()
+    inavsuite.session.resetMSPSensors = true
 end
 
 function tasks.wakeup()
-    local telemetryActive = inavadmin.tasks.msp.onConnectChecksInit and inavadmin.session.telemetryState
+    local telemetryActive = inavsuite.tasks.msp.onConnectChecksInit and inavsuite.session.telemetryState
 
     if telemetryTypeChanged then
         telemetryTypeChanged = false
@@ -95,7 +95,7 @@ function tasks.wakeup()
 
     activeLevel = nil
     for _, level in ipairs(PRIORITY_LEVELS) do
-        if not inavadmin.session.onConnect[level] then
+        if not inavsuite.session.onConnect[level] then
             activeLevel = level
             break
         end
@@ -118,13 +118,13 @@ function tasks.wakeup()
             end
 
             if not task.complete then
-                inavadmin.utils.log("Waking up " .. name, "debug")
+                inavsuite.utils.log("Waking up " .. name, "debug")
                 task.module.wakeup()
                 if task.module.isComplete and task.module.isComplete() then
                     task.complete = true
                     task.startTime = nil
                     task.nextEligibleAt = 0
-                    inavadmin.utils.log("Completed " .. name, "debug")
+                    inavsuite.utils.log("Completed " .. name, "debug")
                 elseif task.startTime and (now - task.startTime) > TASK_TIMEOUT_SECONDS then
 
                     task.attempts = (task.attempts or 0) + 1
@@ -133,11 +133,11 @@ function tasks.wakeup()
                         task.nextEligibleAt = now + backoff
                         task.initialized = false
                         task.startTime = nil
-                        inavadmin.utils.log(string.format("Task '%s' timed out. Re-queueing (attempt %d/%d) in %.1fs.", name, task.attempts, MAX_RETRIES, backoff), "info")
+                        inavsuite.utils.log(string.format("Task '%s' timed out. Re-queueing (attempt %d/%d) in %.1fs.", name, task.attempts, MAX_RETRIES, backoff), "info")
                     else
                         task.failed = true
                         task.startTime = nil
-                        inavadmin.utils.log(string.format("Task '%s' failed after %d attempts. Skipping.", name, MAX_RETRIES), "info")
+                        inavsuite.utils.log(string.format("Task '%s' failed after %d attempts. Skipping.", name, MAX_RETRIES), "info")
                     end
                 end
             end
@@ -154,21 +154,21 @@ function tasks.wakeup()
     end
 
     if levelDone then
-        inavadmin.session.onConnect[activeLevel] = true
-        inavadmin.utils.log("All [" .. activeLevel .. "] tasks complete.", "info")
+        inavsuite.session.onConnect[activeLevel] = true
+        inavsuite.utils.log("All [" .. activeLevel .. "] tasks complete.", "info")
 
         if activeLevel == "high" then
-            inavadmin.utils.playFileCommon("beep.wav")
-            inavadmin.flightmode.current = "preflight"
-            inavadmin.session.isConnectedHigh = true
+            inavsuite.utils.playFileCommon("beep.wav")
+            inavsuite.flightmode.current = "preflight"
+            inavsuite.session.isConnectedHigh = true
             return
         elseif activeLevel == "medium" then
-            inavadmin.session.isConnectedMedium = true
+            inavsuite.session.isConnectedMedium = true
             return
         elseif activeLevel == "low" then
-            inavadmin.session.isConnectedLow = true
-            inavadmin.session.isConnected = true
-            inavadmin.utils.log("Connection [established].", "info")
+            inavsuite.session.isConnectedLow = true
+            inavsuite.session.isConnected = true
+            inavsuite.utils.log("Connection [established].", "info")
             return
         end
     end

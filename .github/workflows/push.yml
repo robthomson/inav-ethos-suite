@@ -1,4 +1,4 @@
-name: Create inavadmin-lua-ethos ZIP on Push
+name: Create inavsuite-lua-ethos ZIP on Push
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           echo "GIT_VER=commit-${SHORT_SHA}" >> $GITHUB_ENV
           echo "sha7=${SHORT_SHA}" >> $GITHUB_OUTPUT
 
-      # Build merged JSON for the specific locale (writes to scripts/inavadmin/i18n/<locale>.json)
+      # Build merged JSON for the specific locale (writes to scripts/inavsuite/i18n/<locale>.json)
       - name: Build i18n for this locale
         run: python bin/i18n/build-single-json.py --only ${{ matrix.lang }}
 
@@ -48,14 +48,14 @@ jobs:
       # Update version in the staged copy
       - name: Update version and config in main.lua (staged)
         run: |
-          sed -E -i "s/(version[[:space:]]*=[[:space:]]*\{[^}]*suffix[[:space:]]*=[[:space:]]*\")[^\"]*(\")/\1${{ env.GIT_VER }}\2/" "${{ env.STAGE }}/inavadmin/main.lua"
-          grep 'config\.' "${{ env.STAGE }}/inavadmin/main.lua" || true
+          sed -E -i "s/(version[[:space:]]*=[[:space:]]*\{[^}]*suffix[[:space:]]*=[[:space:]]*\")[^\"]*(\")/\1${{ env.GIT_VER }}\2/" "${{ env.STAGE }}/inavsuite/main.lua"
+          grep 'config\.' "${{ env.STAGE }}/inavsuite/main.lua" || true
 
       # Resolve @i18n(...)@ tags in the staged tree using the chosen locale
       - name: Resolve i18n tags (locale=${{ matrix.lang }})
         run: |
           python .vscode/scripts/resolve_i18n_tags.py \
-            --json "${{ env.STAGE }}/inavadmin/i18n/${{ matrix.lang }}.json" \
+            --json "${{ env.STAGE }}/inavsuite/i18n/${{ matrix.lang }}.json" \
             --root "${{ env.STAGE }}"
 
       # Copy sound pack for this locale into the staged tree
@@ -67,7 +67,7 @@ jobs:
             echo "[AUDIO] $SRC not found; falling back to bin/sound-generator/soundpack/en"
             SRC="bin/sound-generator/soundpack/en"
           fi
-          DEST="${{ env.STAGE }}/inavadmin/audio/${{ matrix.lang }}"
+          DEST="${{ env.STAGE }}/inavsuite/audio/${{ matrix.lang }}"
           rm -rf "$DEST"
           mkdir -p "$DEST"
           cp -a "$SRC/." "$DEST/"

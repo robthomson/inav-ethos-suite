@@ -10,7 +10,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Resolve @i18n(...)@ tags for a given output dir + language."
     )
-    parser.add_argument("--out-dir", required=True, help="Output directory (root of inavadmin).")
+    parser.add_argument("--out-dir", required=True, help="Output directory (root of inavsuite).")
     parser.add_argument("--lang", default="en", help="Language code, e.g. en, fr, de.")
     parser.add_argument(
         "--git-src",
@@ -30,7 +30,7 @@ def main():
     # Try language JSON in out_dir first, then fall back to repo i18n folder
     json_path = os.path.join(out_dir, "i18n", f"{lang}.json")
     if not os.path.isfile(json_path):
-        json_path = os.path.join(git_src, "scripts", "inavadmin", "i18n", f"{lang}.json")
+        json_path = os.path.join(git_src, "scripts", "inavsuite", "i18n", f"{lang}.json")
 
     if not os.path.isfile(json_path):
         print(f"[I18N] Skipping: {lang}.json not found at {json_path}")

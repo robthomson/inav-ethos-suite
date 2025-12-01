@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local transport = {}
 
@@ -36,12 +36,12 @@ end
 
 transport.mspRead = function(cmd)
     crsfMspCmd = CRSF_FRAMETYPE_MSP_REQ
-    return inavadmin.tasks.msp.common.mspSendRequest(cmd, {})
+    return inavsuite.tasks.msp.common.mspSendRequest(cmd, {})
 end
 
 transport.mspWrite = function(cmd, payload)
     crsfMspCmd = CRSF_FRAMETYPE_MSP_WRITE
-    return inavadmin.tasks.msp.common.mspSendRequest(cmd, payload)
+    return inavsuite.tasks.msp.common.mspSendRequest(cmd, payload)
 end
 
 transport.mspPoll = function()

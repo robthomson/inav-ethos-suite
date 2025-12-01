@@ -3,9 +3,9 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
-local utils = inavadmin.utils
+local utils = inavsuite.utils
 local log = utils.log
 
 local nextUiTask = 1
@@ -13,7 +13,7 @@ local taskAccumulator = 0
 local uiTaskPercent = 100
 
 local function exitApp()
-    local app = inavadmin.app
+    local app = inavsuite.app
     if app.triggers.exitAPP then
         app.triggers.exitAPP = false
         form.invalidate()
@@ -22,21 +22,21 @@ local function exitApp()
 end
 
 local function profileRateChangeDetection()
-    local app = inavadmin.app
-    if not (app.Page and (app.Page.refreshOnProfileChange or app.Page.refreshOnRateChange or app.Page.refreshFullOnProfileChange or app.Page.refreshFullOnRateChange) and app.uiState == app.uiStatus.pages and not app.triggers.isSaving and not app.dialogs.saveDisplay and not app.dialogs.progressDisplay and inavadmin.tasks.msp.mspQueue:isProcessed()) then return end
+    local app = inavsuite.app
+    if not (app.Page and (app.Page.refreshOnProfileChange or app.Page.refreshOnRateChange or app.Page.refreshFullOnProfileChange or app.Page.refreshFullOnRateChange) and app.uiState == app.uiStatus.pages and not app.triggers.isSaving and not app.dialogs.saveDisplay and not app.dialogs.progressDisplay and inavsuite.tasks.msp.mspQueue:isProcessed()) then return end
 
     local now = os.clock()
-    local interval = (inavadmin.tasks.telemetry.getSensorSource("pid_profile") and inavadmin.tasks.telemetry.getSensorSource("rate_profile")) and 0.1 or 1.5
+    local interval = (inavsuite.tasks.telemetry.getSensorSource("pid_profile") and inavsuite.tasks.telemetry.getSensorSource("rate_profile")) and 0.1 or 1.5
 
     if (now - (app.profileCheckScheduler or 0)) >= interval then
         app.profileCheckScheduler = now
         app.utils.getCurrentProfile()
-        if inavadmin.session.activeProfileLast and app.Page.refreshOnProfileChange and inavadmin.session.activeProfile ~= inavadmin.session.activeProfileLast then
+        if inavsuite.session.activeProfileLast and app.Page.refreshOnProfileChange and inavsuite.session.activeProfile ~= inavsuite.session.activeProfileLast then
             app.triggers.reload = not app.Page.refreshFullOnProfileChange
             app.triggers.reloadFull = app.Page.refreshFullOnProfileChange
             return
         end
-        if inavadmin.session.activeRateProfileLast and app.Page.refreshOnRateChange and inavadmin.session.activeRateProfile ~= inavadmin.session.activeRateProfileLast then
+        if inavsuite.session.activeRateProfileLast and app.Page.refreshOnRateChange and inavsuite.session.activeRateProfile ~= inavsuite.session.activeRateProfileLast then
             app.triggers.reload = not app.Page.refreshFullOnRateChange
             app.triggers.reloadFull = app.Page.refreshFullOnRateChange
             return
@@ -45,14 +45,14 @@ local function profileRateChangeDetection()
 end
 
 local function mainMenuIconEnableDisable()
-    local app = inavadmin.app
+    local app = inavsuite.app
     if app.uiState ~= app.uiStatus.mainMenu and app.uiState ~= app.uiStatus.pages then return end
 
-    if inavadmin.session.mspBusy then return end
+    if inavsuite.session.mspBusy then return end
 
     if app.uiState == app.uiStatus.mainMenu then
-        local apiV = tostring(inavadmin.session.apiVersion)
-        if not inavadmin.tasks.active() then
+        local apiV = tostring(inavsuite.session.apiVersion)
+        if not inavsuite.tasks.active() then
             for i, v in pairs(app.formFieldsBGTask) do
                 if v == false and app.formFields[i] then
                     app.formFields[i]:enable(false)
@@ -60,7 +60,7 @@ local function mainMenuIconEnableDisable()
                     log("Main Menu Icon " .. i .. " not found in formFields", "info")
                 end
             end
-        elseif not inavadmin.session.isConnected then
+        elseif not inavsuite.session.isConnected then
             for i, v in pairs(app.formFieldsOffline) do
                 if v == false and app.formFields[i] then
                     app.formFields[i]:enable(false)
@@ -68,7 +68,7 @@ local function mainMenuIconEnableDisable()
                     log("Main Menu Icon " .. i .. " not found in formFields", "info")
                 end
             end
-        elseif inavadmin.session.apiVersion and inavadmin.utils.stringInArray(inavadmin.config.supportedMspApiVersion, apiV) then
+        elseif inavsuite.session.apiVersion and inavsuite.utils.stringInArray(inavsuite.config.supportedMspApiVersion, apiV) then
             app.offlineMode = false
             for i in pairs(app.formFieldsOffline) do
                 if app.formFields[i] then
@@ -79,13 +79,13 @@ local function mainMenuIconEnableDisable()
             end
         end
     elseif not app.isOfflinePage then
-        if not inavadmin.session.isConnected then app.ui.openMainMenu() end
+        if not inavsuite.session.isConnected then app.ui.openMainMenu() end
     end
 end
 
 local function noLinkProgressUpdate()
-    local app = inavadmin.app
-    if inavadmin.session.telemetryState ~= 1 or not app.triggers.disableRssiTimeout then
+    local app = inavsuite.app
+    if inavsuite.session.telemetryState ~= 1 or not app.triggers.disableRssiTimeout then
         if not app.dialogs.nolinkDisplay and not app.triggers.wasConnected then
             if app.dialogs.progressDisplay and app.dialogs.progress then app.dialogs.progress:close() end
             if app.dialogs.saveDisplay and app.dialogs.save then app.dialogs.save:close() end
@@ -96,7 +96,7 @@ local function noLinkProgressUpdate()
 end
 
 local function triggerSaveDialogs()
-    local app = inavadmin.app
+    local app = inavsuite.app
     if app.triggers.triggerSave then
         app.triggers.triggerSave = false
         form.openDialog({
@@ -129,18 +129,18 @@ local function triggerSaveDialogs()
             app.triggers.saveFailed = false
             app.dialogs.saveProgressCounter = 0
             app.ui.progressDisplaySave()
-            inavadmin.tasks.msp.mspQueue.retryCount = 0
+            inavsuite.tasks.msp.mspQueue.retryCount = 0
         end
     end
 end
 
 local function armedSaveWarning()
-    local app = inavadmin.app
+    local app = inavsuite.app
     if not app.triggers.showSaveArmedWarning or app.triggers.closeSave then return end
     if not app.dialogs.progressDisplay then
         app.audio.playSaveArmed = true
         app.dialogs.progressCounter = 0
-        local key = (inavadmin.utils.apiVersionCompare(">=", "2.04") and "@i18n(app.msg_please_disarm_to_save_warning)@" or "@i18n(app.msg_please_disarm_to_save)@")
+        local key = (inavsuite.utils.apiVersionCompare(">=", "2.04") and "@i18n(app.msg_please_disarm_to_save_warning)@" or "@i18n(app.msg_please_disarm_to_save)@")
 
         app.ui.progressDisplay("@i18n(app.msg_save_not_commited)@", key)
     end
@@ -152,7 +152,7 @@ local function armedSaveWarning()
 end
 
 local function triggerReloadDialogs()
-    local app = inavadmin.app
+    local app = inavsuite.app
     if app.triggers.triggerReloadNoPrompt then
         app.triggers.triggerReloadNoPrompt = false
         app.triggers.reload = true
@@ -194,17 +194,17 @@ local function triggerReloadDialogs()
 end
 
 local function telemetryAndPageStateUpdates()
-    local app = inavadmin.app
+    local app = inavsuite.app
     if app.uiState == app.uiStatus.mainMenu then
         app.utils.invalidatePages()
-    elseif app.triggers.isReady and (inavadmin.tasks and inavadmin.tasks.msp and inavadmin.tasks.msp.mspQueue:isProcessed()) and app.Page and app.Page.values then
+    elseif app.triggers.isReady and (inavsuite.tasks and inavsuite.tasks.msp and inavsuite.tasks.msp.mspQueue:isProcessed()) and app.Page and app.Page.values then
         app.triggers.isReady = false
         app.triggers.closeProgressLoader = true
     end
 end
 
 local function performReloadActions()
-    local app = inavadmin.app
+    local app = inavsuite.app
     if app.triggers.reload then
         app.triggers.reload = false
         app.ui.progressDisplay()
@@ -218,7 +218,7 @@ local function performReloadActions()
 end
 
 local function playPendingAudioAlerts()
-    local app = inavadmin.app
+    local app = inavsuite.app
     if app.audio then
         local a = app.audio
         if a.playEraseFlash then
@@ -261,12 +261,12 @@ local function playPendingAudioAlerts()
 end
 
 local function wakeupUITasks()
-    local app = inavadmin.app
+    local app = inavsuite.app
     if app.Page and app.uiState == app.uiStatus.pages and app.Page.wakeup then app.Page.wakeup(app.Page) end
 end
 
 local function requestPage()
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     if app.uiState == app.uiStatus.pages then
         if not app.Page and app.PageTmp then app.Page = app.PageTmp end

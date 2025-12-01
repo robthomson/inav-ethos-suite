@@ -3,9 +3,9 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
-local utils = inavadmin.utils
+local utils = inavsuite.utils
 local compiler = loadfile
 
 local currentTelemetrySensor
@@ -76,7 +76,7 @@ function tasks.isTaskActive(name)
         if t.name == name then
             local age = os.clock() - t.last_run
             if name == "msp" then
-                return inavadmin.session.mspBusy
+                return inavsuite.session.mspBusy
             elseif name == "callback" then
                 return age <= 2
             else
@@ -193,7 +193,7 @@ end
 local function clearSessionAndQueue()
     tasks.setTelemetryTypeChanged()
     utils.session()
-    local q = inavadmin.tasks and inavadmin.tasks.msp and inavadmin.tasks.msp.mspQueue
+    local q = inavsuite.tasks and inavsuite.tasks.msp and inavsuite.tasks.msp.mspQueue
     if q then q:clear() end
 
     internalModule = nil
@@ -210,7 +210,7 @@ function tasks.telemetryCheckScheduler()
     local now = os.clock()
 
     local telemetryState = (tlm and tlm:state()) or false
-    if system.getVersion().simulation and inavadmin.simevent.telemetry_state == false then telemetryState = false end
+    if system.getVersion().simulation and inavsuite.simevent.telemetry_state == false then telemetryState = false end
 
     if not telemetryState then return clearSessionAndQueue() end
 
@@ -224,11 +224,11 @@ function tasks.telemetryCheckScheduler()
     end
 
     if currentSensor then
-        inavadmin.session.telemetryState = true
-        inavadmin.session.telemetrySensor = currentSensor
-        inavadmin.session.telemetryModule = currentModuleId
-        inavadmin.session.telemetryType = currentTelemetryType
-        inavadmin.session.telemetryModuleNumber = currentModuleNumber        
+        inavsuite.session.telemetryState = true
+        inavsuite.session.telemetrySensor = currentSensor
+        inavsuite.session.telemetryModule = currentModuleId
+        inavsuite.session.telemetryType = currentTelemetryType
+        inavsuite.session.telemetryModuleNumber = currentModuleNumber        
 
         if now - lastNameCheckAt >= NAME_CHECK_INTERVAL then
             lastNameCheckAt = now
@@ -265,14 +265,14 @@ function tasks.telemetryCheckScheduler()
 
     if not currentSensor then return clearSessionAndQueue() end
 
-    inavadmin.session.telemetryState = true
-    inavadmin.session.telemetrySensor = currentSensor
-    inavadmin.session.telemetryModule = currentModuleId
-    inavadmin.session.telemetryType = currentTelemetryType
-    inavadmin.session.telemetryModuleNumber = currentModuleNumber           
+    inavsuite.session.telemetryState = true
+    inavsuite.session.telemetrySensor = currentSensor
+    inavsuite.session.telemetryModule = currentModuleId
+    inavsuite.session.telemetryType = currentTelemetryType
+    inavsuite.session.telemetryModuleNumber = currentModuleNumber           
 
     if currentTelemetryType ~= lastTelemetryType then
-        inavadmin.utils.log("Telemetry type changed to " .. tostring(currentTelemetryType), "info")
+        inavsuite.utils.log("Telemetry type changed to " .. tostring(currentTelemetryType), "info")
         tasks.setTelemetryTypeChanged()
         lastTelemetryType = currentTelemetryType
         clearSessionAndQueue()
@@ -297,10 +297,10 @@ local function canRunTask(task, now)
 
     local priorityTask = task.name == "msp" or task.name == "callback"
 
-    local linkOK = not task.linkrequired or inavadmin.session.telemetryState
-    local connOK = not task.connected or inavadmin.session.isConnected
+    local linkOK = not task.linkrequired or inavsuite.session.telemetryState
+    local connOK = not task.connected or inavsuite.session.isConnected
 
-    local ok = linkOK and connOK and (priorityTask or od >= 0 or not inavadmin.session.mspBusy) and (not task.simulatoronly or usingSimulator)
+    local ok = linkOK and connOK and (priorityTask or od >= 0 or not inavsuite.session.mspBusy) and (not task.simulatoronly or usingSimulator)
 
     return ok, od
 end
@@ -312,7 +312,7 @@ function tasks.wakeup()
     local t0 = tasks.heartbeat
     local loopCpu = 0
 
-    tasks.profile.enabled = inavadmin.preferences and inavadmin.preferences.developer and inavadmin.preferences.developer.taskprofiler
+    tasks.profile.enabled = inavsuite.preferences and inavsuite.preferences.developer and inavsuite.preferences.developer.taskprofiler
 
     if ethosVersionGood == nil then ethosVersionGood = utils.ethosVersionAtLeast() end
     if not ethosVersionGood then return end
@@ -439,7 +439,7 @@ function tasks.wakeup()
     end
 
     local cycleFlip = schedulerTick % 2
-    if ((inavadmin.app and inavadmin.app.guiIsRunning) or not inavadmin.session.isConnected) and inavadmin.session.mspBusy then
+    if ((inavsuite.app and inavsuite.app.guiIsRunning) or not inavsuite.session.isConnected) and inavsuite.session.mspBusy then
         if cycleFlip == 0 then
             if tasks.msp then tasks.msp.wakeup() end
         else
@@ -463,15 +463,15 @@ function tasks.wakeup()
     end
 
     local t1 = os.clock()
-    inavadmin.performance = inavadmin.performance or {}
-    inavadmin.performance.taskLoopCpuMs = loopCpu * 1000.0
-    inavadmin.performance.taskLoopTime = (t1 - t0) * 1000.0
+    inavsuite.performance = inavsuite.performance or {}
+    inavsuite.performance.taskLoopCpuMs = loopCpu * 1000.0
+    inavsuite.performance.taskLoopTime = (t1 - t0) * 1000.0
 end
 
 function tasks.reset()
 
     for _, task in ipairs(tasksList) do if tasks[task.name].reset then tasks[task.name].reset() end end
-    inavadmin.utils.session()
+    inavsuite.utils.session()
 end
 
 function tasks.dumpProfile(opts)
@@ -534,7 +534,7 @@ end
 
 function tasks.setTelemetryTypeChanged()
     for _, task in ipairs(tasksList) do if tasks[task.name].setTelemetryTypeChanged then tasks[task.name].setTelemetryTypeChanged() end end
-    inavadmin.utils.session()
+    inavsuite.utils.session()
 end
 
 function tasks.read() end
@@ -547,7 +547,7 @@ function tasks.unload(name)
     if mod and mod.reset then pcall(mod.reset) end
 
     if name == "msp" then
-        local q = inavadmin.tasks and inavadmin.tasks.msp and inavadmin.tasks.msp.mspQueue
+        local q = inavsuite.tasks and inavsuite.tasks.msp and inavsuite.tasks.msp.mspQueue
         if q and q.clear then pcall(function() q:clear() end) end
     end
 
@@ -566,7 +566,7 @@ end
 function tasks.load(name, meta)
 
     if not meta then
-        local initPath = "SCRIPTS:/" .. inavadmin.config.baseDir .. "/tasks/" .. name .. "/init.lua"
+        local initPath = "SCRIPTS:/" .. inavsuite.config.baseDir .. "/tasks/" .. name .. "/init.lua"
         local initFn, err = compiler(initPath)
         if not initFn then
             utils.log("Failed to load init for " .. name .. ": " .. tostring(err), "info")
@@ -591,7 +591,7 @@ function tasks.load(name, meta)
         end
     end
 
-    local scriptPath = "SCRIPTS:/" .. inavadmin.config.baseDir .. "/tasks/" .. name .. "/" .. meta.script
+    local scriptPath = "SCRIPTS:/" .. inavsuite.config.baseDir .. "/tasks/" .. name .. "/" .. meta.script
     local fn, loadErr = compiler(scriptPath)
     if not fn then
         utils.log("Failed to load task script " .. scriptPath .. ": " .. tostring(loadErr), "info")

@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local enableWakeup = false
 local lastWakeup = 0
@@ -15,7 +15,7 @@ local xRight = w - 15
 
 local x, y
 
-local displayPos = {x = xRight - btnW - btnWs - 5 - btnWs, y = inavadmin.app.radio.linePaddingTop, w = 150, h = inavadmin.app.radio.navbuttonHeight}
+local displayPos = {x = xRight - btnW - btnWs - 5 - btnWs, y = inavsuite.app.radio.linePaddingTop, w = 150, h = inavsuite.app.radio.navbuttonHeight}
 
 local IDX_CPULOAD = 0
 local IDX_FREERAM = 1
@@ -43,10 +43,10 @@ end
 
 local function addStatusLine(captionText, initialText)
 
-    inavadmin.app.formLines[inavadmin.app.formLineCnt] = form.addLine(captionText)
-    inavadmin.app.formFields[inavadmin.app.formFieldCount] = form.addStaticText(inavadmin.app.formLines[inavadmin.app.formLineCnt], displayPos, initialText)
-    inavadmin.app.formLineCnt = inavadmin.app.formLineCnt + 1
-    inavadmin.app.formFieldCount = inavadmin.app.formFieldCount + 1
+    inavsuite.app.formLines[inavsuite.app.formLineCnt] = form.addLine(captionText)
+    inavsuite.app.formFields[inavsuite.app.formFieldCount] = form.addStaticText(inavsuite.app.formLines[inavsuite.app.formLineCnt], displayPos, initialText)
+    inavsuite.app.formLineCnt = inavsuite.app.formLineCnt + 1
+    inavsuite.app.formFieldCount = inavsuite.app.formFieldCount + 1
 end
 
 local function moduleEnabled()
@@ -63,27 +63,27 @@ end
 
 local function openPage(pidx, title, script)
     enableWakeup = false
-    inavadmin.app.triggers.closeProgressLoader = true
+    inavsuite.app.triggers.closeProgressLoader = true
     form.clear()
 
-    inavadmin.app.lastIdx = pidx
-    inavadmin.app.lastTitle = title
-    inavadmin.app.lastScript = script
+    inavsuite.app.lastIdx = pidx
+    inavsuite.app.lastTitle = title
+    inavsuite.app.lastScript = script
 
-    inavadmin.app.ui.fieldHeader("@i18n(app.modules.diagnostics.name)@" .. " / " .. "@i18n(app.modules.rfstatus.name)@")
+    inavsuite.app.ui.fieldHeader("@i18n(app.modules.diagnostics.name)@" .. " / " .. "@i18n(app.modules.rfstatus.name)@")
 
-    inavadmin.app.formLineCnt = 0
-    inavadmin.app.formFieldCount = 0
+    inavsuite.app.formLineCnt = 0
+    inavsuite.app.formFieldCount = 0
 
-    local app = inavadmin.app
+    local app = inavsuite.app
     if app.formFields then for i = 1, #app.formFields do app.formFields[i] = nil end end
     if app.formLines then for i = 1, #app.formLines do app.formLines[i] = nil end end
 
-    addStatusLine("@i18n(app.modules.fblstatus.cpu_load)@", string.format("%.1f%%", inavadmin.performance.cpuload or 0))
+    addStatusLine("@i18n(app.modules.fblstatus.cpu_load)@", string.format("%.1f%%", inavsuite.performance.cpuload or 0))
 
-    addStatusLine("@i18n(app.modules.msp_speed.memory_free)@", string.format("%.1f kB", inavadmin.performance.freeram or 0))
+    addStatusLine("@i18n(app.modules.msp_speed.memory_free)@", string.format("%.1f kB", inavsuite.performance.freeram or 0))
 
-    addStatusLine("@i18n(app.modules.rfstatus.bgtask)@", inavadmin.tasks.active() and "@i18n(app.modules.rfstatus.ok)@" or "@i18n(app.modules.rfstatus.error)@")
+    addStatusLine("@i18n(app.modules.rfstatus.bgtask)@", inavsuite.tasks.active() and "@i18n(app.modules.rfstatus.ok)@" or "@i18n(app.modules.rfstatus.error)@")
 
     addStatusLine("@i18n(app.modules.rfstatus.rfmodule)@", moduleEnabled() and "@i18n(app.modules.rfstatus.ok)@" or "@i18n(app.modules.rfstatus.error)@")
 
@@ -98,8 +98,8 @@ local function openPage(pidx, title, script)
     enableWakeup = true
 end
 
-local function postLoad(self) inavadmin.utils.log("postLoad", "debug") end
-local function postRead(self) inavadmin.utils.log("postRead", "debug") end
+local function postLoad(self) inavsuite.utils.log("postLoad", "debug") end
+local function postRead(self) inavsuite.utils.log("postRead", "debug") end
 
 local function wakeup()
     if not enableWakeup then return end
@@ -109,35 +109,35 @@ local function wakeup()
     lastWakeup = now
 
     do
-        local field = inavadmin.app.formFields and inavadmin.app.formFields[IDX_CPULOAD]
-        if field then field:value(string.format("%.1f%%", inavadmin.performance.cpuload or 0)) end
+        local field = inavsuite.app.formFields and inavsuite.app.formFields[IDX_CPULOAD]
+        if field then field:value(string.format("%.1f%%", inavsuite.performance.cpuload or 0)) end
     end
 
     do
-        local field = inavadmin.app.formFields and inavadmin.app.formFields[IDX_FREERAM]
-        if field then field:value(string.format("%.1f kB", inavadmin.utils.round(inavadmin.performance.freeram or 0, 1))) end
+        local field = inavsuite.app.formFields and inavsuite.app.formFields[IDX_FREERAM]
+        if field then field:value(string.format("%.1f kB", inavsuite.utils.round(inavsuite.performance.freeram or 0, 1))) end
     end
 
     do
-        local field = inavadmin.app.formFields and inavadmin.app.formFields[IDX_BG_TASK]
-        local ok = inavadmin.tasks and inavadmin.tasks.active()
+        local field = inavsuite.app.formFields and inavsuite.app.formFields[IDX_BG_TASK]
+        local ok = inavsuite.tasks and inavsuite.tasks.active()
         setStatus(field, ok)
     end
 
     do
-        local field = inavadmin.app.formFields and inavadmin.app.formFields[IDX_RF_MODULE]
+        local field = inavsuite.app.formFields and inavsuite.app.formFields[IDX_RF_MODULE]
         setStatus(field, moduleEnabled())
     end
 
     do
-        local field = inavadmin.app.formFields and inavadmin.app.formFields[IDX_MSP]
+        local field = inavsuite.app.formFields and inavsuite.app.formFields[IDX_MSP]
         setStatus(field, haveMspSensor())
     end
 
     do
-        local field = inavadmin.app.formFields and inavadmin.app.formFields[IDX_TELEM]
+        local field = inavsuite.app.formFields and inavsuite.app.formFields[IDX_TELEM]
         if field then
-            local sensors = inavadmin.tasks and inavadmin.tasks.telemetry and inavadmin.tasks.telemetry.validateSensors(false) or false
+            local sensors = inavsuite.tasks and inavsuite.tasks.telemetry and inavsuite.tasks.telemetry.validateSensors(false) or false
             if type(sensors) == "table" then
 
                 setStatus(field, #sensors == 0)
@@ -149,9 +149,9 @@ local function wakeup()
     end
 
     do
-        local field = inavadmin.app.formFields and inavadmin.app.formFields[IDX_FBLCONNECTED]
+        local field = inavsuite.app.formFields and inavsuite.app.formFields[IDX_FBLCONNECTED]
         if field then
-            local isConnected = inavadmin.session and inavadmin.session.isConnected
+            local isConnected = inavsuite.session and inavsuite.session.isConnected
             if isConnected then
                 setStatus(field, isConnected)
             else
@@ -161,9 +161,9 @@ local function wakeup()
     end
 
     do
-        local field = inavadmin.app.formFields and inavadmin.app.formFields[IDX_APIVERSION]
+        local field = inavsuite.app.formFields and inavsuite.app.formFields[IDX_APIVERSION]
         if field then
-            local isInvalid = not inavadmin.session.apiVersionInvalid
+            local isInvalid = not inavsuite.session.apiVersionInvalid
             setStatus(field, isInvalid)
         end
     end
@@ -173,14 +173,14 @@ end
 local function event(widget, category, value, x, y)
 
     if (category == EVT_CLOSE and value == 0) or value == 35 then
-        inavadmin.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
+        inavsuite.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
         return true
     end
 end
 
 local function onNavMenu()
-    inavadmin.app.ui.progressDisplay(nil, nil, true)
-    inavadmin.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
+    inavsuite.app.ui.progressDisplay(nil, nil, true)
+    inavsuite.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
 end
 
 return {reboot = false, eepromWrite = false, minBytes = 0, wakeup = wakeup, refreshswitch = false, simulatorResponse = {}, postLoad = postLoad, postRead = postRead, openPage = openPage, onNavMenu = onNavMenu, event = event, navButtons = {menu = true, save = false, reload = false, tool = false, help = false}, API = {}}

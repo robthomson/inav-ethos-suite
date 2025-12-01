@@ -3,9 +3,9 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
-local MSP_PROTOCOL_VERSION = inavadmin.config.mspProtocolVersion or 1
+local MSP_PROTOCOL_VERSION = inavsuite.config.mspProtocolVersion or 1
 
 local arg = {...}
 local config = arg[1]
@@ -15,7 +15,7 @@ local msp = {}
 msp.activeProtocol = nil
 msp.onConnectChecksInit = true
 
-local protocol = assert(loadfile("SCRIPTS:/" .. inavadmin.config.baseDir .. "/tasks/msp/protocols.lua"))()
+local protocol = assert(loadfile("SCRIPTS:/" .. inavsuite.config.baseDir .. "/tasks/msp/protocols.lua"))()
 
 local telemetryTypeChanged = false
 
@@ -32,15 +32,15 @@ msp.protocol.mspSend = transport.mspSend
 msp.protocol.mspWrite = transport.mspWrite
 msp.protocol.mspPoll = transport.mspPoll
 
-msp.mspQueue = assert(loadfile("SCRIPTS:/" .. inavadmin.config.baseDir .. "/tasks/msp/mspQueue.lua"))()
+msp.mspQueue = assert(loadfile("SCRIPTS:/" .. inavsuite.config.baseDir .. "/tasks/msp/mspQueue.lua"))()
 msp.mspQueue.maxRetries = msp.protocol.maxRetries
 msp.mspQueue.loopInterval = 0.031
 msp.mspQueue.copyOnAdd = true
 msp.mspQueue.timeout = 2.0
 
-msp.mspHelper = assert(loadfile("SCRIPTS:/" .. inavadmin.config.baseDir .. "/tasks/msp/mspHelper.lua"))()
-msp.api = assert(loadfile("SCRIPTS:/" .. inavadmin.config.baseDir .. "/tasks/msp/api.lua"))()
-msp.common = assert(loadfile("SCRIPTS:/" .. inavadmin.config.baseDir .. "/tasks/msp/common.lua"))()
+msp.mspHelper = assert(loadfile("SCRIPTS:/" .. inavsuite.config.baseDir .. "/tasks/msp/mspHelper.lua"))()
+msp.api = assert(loadfile("SCRIPTS:/" .. inavsuite.config.baseDir .. "/tasks/msp/api.lua"))()
+msp.common = assert(loadfile("SCRIPTS:/" .. inavsuite.config.baseDir .. "/tasks/msp/common.lua"))()
 msp.common.setProtocolVersion(MSP_PROTOCOL_VERSION or 1)
 
 
@@ -50,27 +50,27 @@ local delayPending = false
 
 function msp.wakeup()
 
-    if inavadmin.session.telemetrySensor == nil then return end
+    if inavsuite.session.telemetrySensor == nil then return end
 
-    if inavadmin.session.resetMSP and not delayPending then
+    if inavsuite.session.resetMSP and not delayPending then
         delayStartTime = os.clock()
         delayPending = true
-        inavadmin.session.resetMSP = false
-        inavadmin.utils.log("Delaying msp wakeup for " .. delayDuration .. " seconds", "info")
+        inavsuite.session.resetMSP = false
+        inavsuite.utils.log("Delaying msp wakeup for " .. delayDuration .. " seconds", "info")
         return
     end
 
     if delayPending then
         if os.clock() - delayStartTime >= delayDuration then
-            inavadmin.utils.log("Delay complete; resuming msp wakeup", "info")
+            inavsuite.utils.log("Delay complete; resuming msp wakeup", "info")
             delayPending = false
         else
-            inavadmin.tasks.msp.mspQueue:clear()
+            inavsuite.tasks.msp.mspQueue:clear()
             return
         end
     end
 
-    msp.activeProtocol = inavadmin.session.telemetryType
+    msp.activeProtocol = inavsuite.session.telemetryType
 
     if telemetryTypeChanged == true then
 
@@ -82,20 +82,20 @@ function msp.wakeup()
         msp.protocol.mspWrite = transport.mspWrite
         msp.protocol.mspPoll = transport.mspPoll
 
-        inavadmin.utils.session()
+        inavsuite.utils.session()
         msp.onConnectChecksInit = true
         telemetryTypeChanged = false
     end
 
-    if inavadmin.session.telemetrySensor ~= nil and inavadmin.session.telemetryState == false then
-        inavadmin.utils.session()
+    if inavsuite.session.telemetrySensor ~= nil and inavsuite.session.telemetryState == false then
+        inavsuite.utils.session()
         msp.onConnectChecksInit = true
     end
 
     local state
 
-    if inavadmin.session.telemetrySensor then
-        state = inavadmin.session.telemetryState
+    if inavsuite.session.telemetrySensor then
+        state = inavsuite.session.telemetryState
     else
         state = false
     end
@@ -111,7 +111,7 @@ end
 function msp.setTelemetryTypeChanged() telemetryTypeChanged = true end
 
 function msp.reset()
-    inavadmin.tasks.msp.mspQueue:clear()
+    inavsuite.tasks.msp.mspQueue:clear()
     msp.activeProtocol = nil
     msp.onConnectChecksInit = true
     delayStartTime = nil

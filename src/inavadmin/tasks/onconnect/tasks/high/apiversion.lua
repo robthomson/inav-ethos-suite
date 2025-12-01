@@ -3,34 +3,34 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local apiversion = {}
 
 local mspCallMade = false
 
 function apiversion.wakeup()
-    if inavadmin.session.apiVersion == nil and mspCallMade == false then
+    if inavsuite.session.apiVersion == nil and mspCallMade == false then
 
         mspCallMade = true
 
-        local API = inavadmin.tasks.msp.api.load("API_VERSION")
+        local API = inavsuite.tasks.msp.api.load("API_VERSION")
         API.setCompleteHandler(function(self, buf)
             local version = API.readVersion()
 
             if version then
                 local apiVersionString = tostring(version)
-                if not inavadmin.utils.stringInArray(inavadmin.config.supportedMspApiVersion, apiVersionString) then
-                    inavadmin.utils.log("Incompatible API version detected: " .. apiVersionString, "info")
-                    inavadmin.session.apiVersionInvalid = true
+                if not inavsuite.utils.stringInArray(inavsuite.config.supportedMspApiVersion, apiVersionString) then
+                    inavsuite.utils.log("Incompatible API version detected: " .. apiVersionString, "info")
+                    inavsuite.session.apiVersionInvalid = true
                     return
                 end
             end
 
-            inavadmin.session.apiVersion = version
-            inavadmin.session.apiVersionInvalid = false
+            inavsuite.session.apiVersion = version
+            inavsuite.session.apiVersionInvalid = false
 
-            if inavadmin.session.apiVersion then inavadmin.utils.log("API version: " .. inavadmin.session.apiVersion, "info") end
+            if inavsuite.session.apiVersion then inavsuite.utils.log("API version: " .. inavsuite.session.apiVersion, "info") end
         end)
         API.setUUID("22a683cb-db0e-439f-8d04-04687c9360f3")
         API.read()
@@ -38,11 +38,11 @@ function apiversion.wakeup()
 end
 
 function apiversion.reset()
-    inavadmin.session.apiVersion = nil
-    inavadmin.session.apiVersionInvalid = nil
+    inavsuite.session.apiVersion = nil
+    inavsuite.session.apiVersionInvalid = nil
     mspCallMade = false
 end
 
-function apiversion.isComplete() if inavadmin.session.apiVersion ~= nil then return true end end
+function apiversion.isComplete() if inavsuite.session.apiVersion ~= nil then return true end end
 
 return apiversion

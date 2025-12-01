@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local arg = {...}
 local config = arg[1]
@@ -11,24 +11,24 @@ local config = arg[1]
 local logger = {}
 
 os.mkdir("LOGS:")
-os.mkdir("LOGS:/inavadmin")
-os.mkdir("LOGS:/inavadmin/logs")
+os.mkdir("LOGS:/inavsuite")
+os.mkdir("LOGS:/inavsuite/logs")
 logger.queue = assert(loadfile("tasks/logger/lib/log.lua"))(config)
-logger.queue.config.log_file = "LOGS:/inavadmin/logs/inavadmin_" .. os.date("%Y-%m-%d_%H-%M-%S") .. ".log"
-logger.queue.config.min_print_level = inavadmin.preferences.developer.loglevel
-local logtofile = inavadmin.preferences.developer.logtofile
+logger.queue.config.log_file = "LOGS:/inavsuite/logs/inavsuite_" .. os.date("%Y-%m-%d_%H-%M-%S") .. ".log"
+logger.queue.config.min_print_level = inavsuite.preferences.developer.loglevel
+local logtofile = inavsuite.preferences.developer.logtofile
 logger.queue.config.log_to_file = (logtofile == true or logtofile == "true")
 
 function logger.wakeup()
-    if inavadmin.session.mspBusy then return end
+    if inavsuite.session.mspBusy then return end
     logger.queue.process()
 end
 
 function logger.reset() end
 
 function logger.add(message, level)
-    logger.queue.config.min_print_level = inavadmin.preferences.developer.loglevel
-    local logtofile = inavadmin.preferences.developer.logtofile
+    logger.queue.config.min_print_level = inavsuite.preferences.developer.loglevel
+    local logtofile = inavsuite.preferences.developer.logtofile
     logger.queue.config.log_to_file = (logtofile == true or logtofile == "true")
     logger.queue.config.prefix = function() return string.format("[%.2f] ", os.clock()) end
     logger.queue.add(message, level)

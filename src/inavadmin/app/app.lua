@@ -3,10 +3,10 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local app = {}
-local utils = inavadmin.utils
+local utils = inavsuite.utils
 local log = utils.log
 local compile = loadfile
 
@@ -16,7 +16,7 @@ local config = arg[1]
 function app.paint()
     if app.Page and app.Page.paint then app.Page.paint(app.Page) end
 
-    if app.ui and app.ui.adminStatsOverlay then if not inavadmin.session.mspBusy then app.ui.adminStatsOverlay() end end
+    if app.ui and app.ui.adminStatsOverlay then if not inavsuite.session.mspBusy then app.ui.adminStatsOverlay() end end
 
 end
 
@@ -25,7 +25,7 @@ function app.wakeup()
 
     if app.tasks then app.tasks.wakeup() end
 
-    if inavadmin.preferences and inavadmin.preferences.developer and inavadmin.preferences.developer.overlaystatsadmin then if not inavadmin.session.mspBusy then lcd.invalidate() end end
+    if inavsuite.preferences and inavsuite.preferences.developer and inavsuite.preferences.developer.overlaystatsadmin then if not inavsuite.session.mspBusy then lcd.invalidate() end end
 end
 
 function app.create()
@@ -168,7 +168,7 @@ function app.event(widget, category, value, x, y)
         app.ui.openMainMenu()
         return true
     end
-    if inavadmin.app.lastMenu ~= nil and category == 3 and value == 0 then
+    if inavsuite.app.lastMenu ~= nil and category == 3 and value == 0 then
         app.ui.openMainMenu()
         return true
     end
@@ -215,10 +215,10 @@ function app.event(widget, category, value, x, y)
 end
 
 function app.close()
-    inavadmin.utils.reportMemoryUsage("app.close", "start")
+    inavsuite.utils.reportMemoryUsage("app.close", "start")
 
-    local userpref_file = "SCRIPTS:/" .. inavadmin.config.preferences .. "/preferences.ini"
-    inavadmin.ini.save_ini_file(userpref_file, inavadmin.preferences)
+    local userpref_file = "SCRIPTS:/" .. inavsuite.config.preferences .. "/preferences.ini"
+    inavsuite.ini.save_ini_file(userpref_file, inavsuite.preferences)
 
     app.guiIsRunning = false
     app.offlineMode = false
@@ -231,7 +231,7 @@ function app.close()
     if app.dialogs.noLink then app.dialogs.noLink:close() end
 
     config.useCompiler = true
-    inavadmin.config.useCompiler = true
+    inavsuite.config.useCompiler = true
 
     config.useCompiler = true
     app.triggers.exitAPP = false
@@ -244,9 +244,9 @@ function app.close()
     app.triggers.invalidConnectionSetup = false
     app.triggers.profileswitchLast = nil
 
-    inavadmin.tasks.msp.api.resetApidata()
+    inavsuite.tasks.msp.api.resetApidata()
 
-    inavadmin.utils.reportMemoryUsage("app.close", "end")
+    inavsuite.utils.reportMemoryUsage("app.close", "end")
 
     system.exit()
 

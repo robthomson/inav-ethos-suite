@@ -3,13 +3,13 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
-local core = assert(loadfile("SCRIPTS:/" .. inavadmin.config.baseDir .. "/tasks/msp/api_core.lua"))()
+local inavsuite = require("inavsuite")
+local core = assert(loadfile("SCRIPTS:/" .. inavsuite.config.baseDir .. "/tasks/msp/api_core.lua"))()
 
 local API_NAME = "API_VERSION"
 local MSP_API_CMD_READ = 1
 
-local MSP_API_SIMULATOR_RESPONSE = inavadmin.utils.splitVersionStringToNumbers(inavadmin.config.supportedMspApiVersion[inavadmin.preferences.developer.apiversion])
+local MSP_API_SIMULATOR_RESPONSE = inavsuite.utils.splitVersionStringToNumbers(inavsuite.config.supportedMspApiVersion[inavsuite.preferences.developer.apiversion])
 
 -- LuaFormatter off
 local MSP_API_STRUCTURE_READ = {
@@ -47,12 +47,12 @@ end
 
 local function read()
     if MSP_API_CMD_READ == nil then
-        inavadmin.utils.log("No value set for MSP_API_CMD_READ", "debug")
+        inavsuite.utils.log("No value set for MSP_API_CMD_READ", "debug")
         return
     end
 
     local message = {command = MSP_API_CMD_READ, structure = MSP_API_STRUCTURE_READ, minBytes = MSP_MIN_BYTES, processReply = processReplyStaticRead, errorHandler = errorHandlerStatic, simulatorResponse = MSP_API_SIMULATOR_RESPONSE, uuid = MSP_API_UUID, timeout = MSP_API_MSG_TIMEOUT, getCompleteHandler = handlers.getCompleteHandler, getErrorHandler = handlers.getErrorHandler, mspData = nil}
-    inavadmin.tasks.msp.mspQueue:add(message)
+    inavsuite.tasks.msp.mspQueue:add(message)
 end
 
 local function data() return mspData end

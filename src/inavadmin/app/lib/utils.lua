@@ -3,19 +3,19 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local utils = {}
-local app = inavadmin.app
-local session = inavadmin.session
-local rfutils = inavadmin.utils
-local tasks = inavadmin.tasks
+local app = inavsuite.app
+local session = inavsuite.session
+local rfutils = inavsuite.utils
+local tasks = inavsuite.tasks
 
 local arg = {...}
 local config = arg[1]
 
 function utils.getRSSI()
-    if inavadmin.simevent.rflink == 1 then return 0 end
+    if inavsuite.simevent.rflink == 1 then return 0 end
 
     if app.offlineMode == true then return 100 end
 
@@ -93,7 +93,7 @@ end
 
 function utils.getInlinePositions(f)
 
-    local lPage = inavadmin.app.Page.apidata.formdata
+    local lPage = inavsuite.app.Page.apidata.formdata
 
     local function getInlineSize(id)
         if not id then return 13.6 end

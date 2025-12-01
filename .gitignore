@@ -1,7 +1,7 @@
 *~
 **/.DS_Store
 *.orig.png
-scripts/inavadmin.zip
+scripts/inavsuite.zip
 /bin/sound-generator/soundpack/user/*.wav
 *subprocess_conout.cpython-312.*
 simulator/*

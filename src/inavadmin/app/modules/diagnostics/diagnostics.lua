@@ -3,9 +3,9 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
-local app = inavadmin.app
-local log = inavadmin.utils.log
+local inavsuite = require("inavsuite")
+local app = inavsuite.app
+local log = inavsuite.utils.log
 
 local S_PAGES = {
     {name = "@i18n(app.modules.rfstatus.name)@", script = "rfstatus.lua", image = "rfstatus.png", bgtask = false, offline = false}, {name = "@i18n(app.modules.msp_speed.name)@", script = "msp_speed.lua", image = "msp_speed.png", bgtask = true, offline = true}, {name = "@i18n(app.modules.validate_sensors.name)@", script = "sensors.lua", image = "sensors.png", bgtask = true, offline = true},
@@ -25,10 +25,10 @@ local function openPage(pidx, title, script)
 
     for i in pairs(app.gfx_buttons) do if i ~= "diagnostics" then app.gfx_buttons[i] = nil end end
 
-    if inavadmin.preferences.general.iconsize == nil or inavadmin.preferences.general.iconsize == "" then
-        inavadmin.preferences.general.iconsize = 1
+    if inavsuite.preferences.general.iconsize == nil or inavsuite.preferences.general.iconsize == "" then
+        inavsuite.preferences.general.iconsize = 1
     else
-        inavadmin.preferences.general.iconsize = tonumber(inavadmin.preferences.general.iconsize)
+        inavsuite.preferences.general.iconsize = tonumber(inavsuite.preferences.general.iconsize)
     end
 
     local w, h = lcd.getWindowSize()
@@ -51,7 +51,7 @@ local function openPage(pidx, title, script)
         paint = function() end,
         press = function()
             app.lastIdx = nil
-            inavadmin.session.lastPage = nil
+            inavsuite.session.lastPage = nil
 
             if app.Page and app.Page.onNavMenu then
                 app.Page.onNavMenu(app.Page)
@@ -68,14 +68,14 @@ local function openPage(pidx, title, script)
     local padding
     local numPerRow
 
-    if inavadmin.preferences.general.iconsize == 0 then
+    if inavsuite.preferences.general.iconsize == 0 then
         padding = app.radio.buttonPaddingSmall
         buttonW = (app.lcdWidth - padding) / app.radio.buttonsPerRow - padding
         buttonH = app.radio.navbuttonHeight
         numPerRow = app.radio.buttonsPerRow
     end
 
-    if inavadmin.preferences.general.iconsize == 1 then
+    if inavsuite.preferences.general.iconsize == 1 then
 
         padding = app.radio.buttonPaddingSmall
         buttonW = app.radio.buttonWidthSmall
@@ -83,7 +83,7 @@ local function openPage(pidx, title, script)
         numPerRow = app.radio.buttonsPerRowSmall
     end
 
-    if inavadmin.preferences.general.iconsize == 2 then
+    if inavsuite.preferences.general.iconsize == 2 then
 
         padding = app.radio.buttonPadding
         buttonW = app.radio.buttonWidth
@@ -92,7 +92,7 @@ local function openPage(pidx, title, script)
     end
 
     if app.gfx_buttons["diagnostics"] == nil then app.gfx_buttons["diagnostics"] = {} end
-    if inavadmin.preferences.menulastselected["diagnostics"] == nil then inavadmin.preferences.menulastselected["diagnostics"] = 1 end
+    if inavsuite.preferences.menulastselected["diagnostics"] == nil then inavsuite.preferences.menulastselected["diagnostics"] = 1 end
 
     local Menu = assert(loadfile("app/modules/" .. script))()
     local pages = S_PAGES
@@ -112,14 +112,14 @@ local function openPage(pidx, title, script)
         app.formFieldsBGTask[pidx] = pvalue.bgtask or false
 
         if lc == 0 then
-            if inavadmin.preferences.general.iconsize == 0 then y = form.height() + app.radio.buttonPaddingSmall end
-            if inavadmin.preferences.general.iconsize == 1 then y = form.height() + app.radio.buttonPaddingSmall end
-            if inavadmin.preferences.general.iconsize == 2 then y = form.height() + app.radio.buttonPadding end
+            if inavsuite.preferences.general.iconsize == 0 then y = form.height() + app.radio.buttonPaddingSmall end
+            if inavsuite.preferences.general.iconsize == 1 then y = form.height() + app.radio.buttonPaddingSmall end
+            if inavsuite.preferences.general.iconsize == 2 then y = form.height() + app.radio.buttonPadding end
         end
 
         if lc >= 0 then bx = (buttonW + padding) * lc end
 
-        if inavadmin.preferences.general.iconsize ~= 0 then
+        if inavsuite.preferences.general.iconsize ~= 0 then
             if app.gfx_buttons["diagnostics"][pidx] == nil then app.gfx_buttons["diagnostics"][pidx] = lcd.loadMask("app/modules/diagnostics/gfx/" .. pvalue.image) end
         else
             app.gfx_buttons["diagnostics"][pidx] = nil
@@ -131,13 +131,13 @@ local function openPage(pidx, title, script)
             options = FONT_S,
             paint = function() end,
             press = function()
-                inavadmin.preferences.menulastselected["diagnostics"] = pidx
+                inavsuite.preferences.menulastselected["diagnostics"] = pidx
                 app.ui.progressDisplay(nil, nil, true)
                 app.ui.openPage(pidx, "@i18n(app.modules.diagnostics.name)@" .. " / " .. pvalue.name, "diagnostics/tools/" .. pvalue.script)
             end
         })
 
-        if inavadmin.preferences.menulastselected["diagnostics"] == pidx then app.formFields[pidx]:focus() end
+        if inavsuite.preferences.menulastselected["diagnostics"] == pidx then app.formFields[pidx]:focus() end
 
         lc = lc + 1
 
@@ -152,7 +152,7 @@ end
 
 local function wakeup()
 
-    if not inavadmin.tasks.active() then
+    if not inavsuite.tasks.active() then
         for i, v in pairs(app.formFieldsBGTask) do
             if v == true then
                 if app.formFields[i] then
@@ -162,7 +162,7 @@ local function wakeup()
                 end
             end
         end
-    elseif not inavadmin.session.isConnected then
+    elseif not inavsuite.session.isConnected then
         for i, v in pairs(app.formFieldsOffline) do
             if v == true then
                 if app.formFields[i] and app.formFields[i].enable then

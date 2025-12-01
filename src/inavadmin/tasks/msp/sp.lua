@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local transport = {}
 
@@ -30,7 +30,7 @@ local function _map_subframe(dataId, value) return {dataId & 0xFF, (dataId >> 8)
 function transport.sportTelemetryPush(sensorId, frameId, dataId, value)
     if not sensor then 
         sensor = sport.getSensor({primId = 0x32}) 
-        sensor:module(inavadmin.session.telemetryModuleNumber or 0)
+        sensor:module(inavsuite.session.telemetryModuleNumber or 0)
     end
     return sensor:pushFrame({physId = sensorId, primId = frameId, appId = dataId, value = value})
 end
@@ -38,7 +38,7 @@ end
 function transport.sportTelemetryPop()
     if not sensor then 
         sensor = sport.getSensor({primId = 0x32}) 
-        sensor:module(inavadmin.session.telemetryModuleNumber or 0)
+        sensor:module(inavsuite.session.telemetryModuleNumber or 0)
     end
     local frame = sensor:popFrame()
     if frame == nil then return nil, nil, nil, nil end
@@ -52,9 +52,9 @@ transport.mspSend = function(payload)
     return transport.sportTelemetryPush(LOCAL_SENSOR_ID, REQUEST_FRAME_ID, dataId, value)
 end
 
-transport.mspRead = function(cmd) return inavadmin.tasks.msp.common.mspSendRequest(cmd, {}) end
+transport.mspRead = function(cmd) return inavsuite.tasks.msp.common.mspSendRequest(cmd, {}) end
 
-transport.mspWrite = function(cmd, payload) return inavadmin.tasks.msp.common.mspSendRequest(cmd, payload) end
+transport.mspWrite = function(cmd, payload) return inavsuite.tasks.msp.common.mspSendRequest(cmd, payload) end
 
 local lastSensorId, lastFrameId, lastDataId, lastValue = nil, nil, nil, nil
 

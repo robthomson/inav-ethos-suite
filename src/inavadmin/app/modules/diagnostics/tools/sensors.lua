@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local fields = {}
 local labels = {}
@@ -15,9 +15,9 @@ local buttonW = 100
 local buttonWs = buttonW - (buttonW * 20) / 100
 local x = w - 15
 
-local displayPos = {x = x - buttonW - buttonWs - 5 - buttonWs, y = inavadmin.app.radio.linePaddingTop, w = 100, h = inavadmin.app.radio.navbuttonHeight}
+local displayPos = {x = x - buttonW - buttonWs - 5 - buttonWs, y = inavsuite.app.radio.linePaddingTop, w = 100, h = inavsuite.app.radio.navbuttonHeight}
 
-local invalidSensors = inavadmin.tasks.telemetry.validateSensors()
+local invalidSensors = inavsuite.tasks.telemetry.validateSensors()
 
 local repairSensors = false
 
@@ -30,31 +30,31 @@ local function sortSensorListByName(sensorList)
     return sensorList
 end
 
-local sensorList = sortSensorListByName(inavadmin.tasks.telemetry.listSensors())
+local sensorList = sortSensorListByName(inavsuite.tasks.telemetry.listSensors())
 
 local function openPage(pidx, title, script)
     enableWakeup = false
-    inavadmin.app.triggers.closeProgressLoader = true
+    inavsuite.app.triggers.closeProgressLoader = true
 
     form.clear()
 
-    inavadmin.app.lastIdx = pidx
-    inavadmin.app.lastTitle = title
-    inavadmin.app.lastScript = script
+    inavsuite.app.lastIdx = pidx
+    inavsuite.app.lastTitle = title
+    inavsuite.app.lastScript = script
 
-    inavadmin.app.ui.fieldHeader("@i18n(app.modules.diagnostics.name)@" .. " / " .. "@i18n(app.modules.validate_sensors.name)@")
+    inavsuite.app.ui.fieldHeader("@i18n(app.modules.diagnostics.name)@" .. " / " .. "@i18n(app.modules.validate_sensors.name)@")
 
-    inavadmin.app.formLineCnt = 0
+    inavsuite.app.formLineCnt = 0
 
-    local app = inavadmin.app
+    local app = inavsuite.app
     if app.formFields then for i = 1, #app.formFields do app.formFields[i] = nil end end
     if app.formLines then for i = 1, #app.formLines do app.formLines[i] = nil end end
 
-    local posText = {x = x - 5 - buttonW - buttonWs, y = inavadmin.app.radio.linePaddingTop, w = 200, h = inavadmin.app.radio.navbuttonHeight}
+    local posText = {x = x - 5 - buttonW - buttonWs, y = inavsuite.app.radio.linePaddingTop, w = 200, h = inavsuite.app.radio.navbuttonHeight}
     for i, v in ipairs(sensorList or {}) do
-        inavadmin.app.formLineCnt = inavadmin.app.formLineCnt + 1
-        inavadmin.app.formLines[inavadmin.app.formLineCnt] = form.addLine(v.name)
-        inavadmin.app.formFields[v.key] = form.addStaticText(inavadmin.app.formLines[inavadmin.app.formLineCnt], posText, "-")
+        inavsuite.app.formLineCnt = inavsuite.app.formLineCnt + 1
+        inavsuite.app.formLines[inavsuite.app.formLineCnt] = form.addLine(v.name)
+        inavsuite.app.formFields[v.key] = form.addStaticText(inavsuite.app.formLines[inavsuite.app.formLineCnt], posText, "-")
     end
 
     enableWakeup = true
@@ -68,18 +68,18 @@ local function sensorKeyExists(searchKey, sensorTable)
     return false
 end
 
-local function postLoad(self) inavadmin.utils.log("postLoad", "debug") end
+local function postLoad(self) inavsuite.utils.log("postLoad", "debug") end
 
-local function postRead(self) inavadmin.utils.log("postRead", "debug") end
+local function postRead(self) inavsuite.utils.log("postRead", "debug") end
 
 local function rebootFC()
 
-    local RAPI = inavadmin.tasks.msp.api.load("REBOOT")
+    local RAPI = inavsuite.tasks.msp.api.load("REBOOT")
     RAPI.setUUID("123e4567-e89b-12d3-a456-426614174000")
     RAPI.setCompleteHandler(function(self)
-        inavadmin.utils.log("Rebooting FC", "info")
+        inavsuite.utils.log("Rebooting FC", "info")
 
-        inavadmin.utils.onReboot()
+        inavsuite.utils.onReboot()
 
     end)
     RAPI.write()
@@ -87,10 +87,10 @@ local function rebootFC()
 end
 
 local function applySettings()
-    local EAPI = inavadmin.tasks.msp.api.load("EEPROM_WRITE")
+    local EAPI = inavsuite.tasks.msp.api.load("EEPROM_WRITE")
     EAPI.setUUID("550e8400-e29b-41d4-a716-446655440000")
     EAPI.setCompleteHandler(function(self)
-        inavadmin.utils.log("Writing to EEPROM", "info")
+        inavsuite.utils.log("Writing to EEPROM", "info")
         rebootFC()
     end)
     EAPI.write()
@@ -99,7 +99,7 @@ end
 
 local function runRepair(data)
 
-    local sensorList = inavadmin.tasks.telemetry.listSensors()
+    local sensorList = inavsuite.tasks.telemetry.listSensors()
     local newSensorList = {}
 
     local count = 1
@@ -121,7 +121,7 @@ local function runRepair(data)
         end
     end
 
-    local WRITEAPI = inavadmin.tasks.msp.api.load("TELEMETRY_CONFIG")
+    local WRITEAPI = inavsuite.tasks.msp.api.load("TELEMETRY_CONFIG")
     WRITEAPI.setUUID("123e4567-e89b-12d3-a456-426614174000")
     WRITEAPI.setCompleteHandler(function(self, buf) applySettings() end)
 
@@ -158,19 +158,19 @@ local function wakeup()
 
         local buttons = {{label = "@i18n(app.btn_ok)@", action = function() return true end}}
 
-        if inavadmin.utils.ethosVersionAtLeast({1, 6, 3}) then
-            inavadmin.utils.log("Starting discover sensors", "info")
-            inavadmin.tasks.msp.sensorTlm:discover()
+        if inavsuite.utils.ethosVersionAtLeast({1, 6, 3}) then
+            inavsuite.utils.log("Starting discover sensors", "info")
+            inavsuite.tasks.msp.sensorTlm:discover()
         else
             form.openDialog({width = nil, title = "@i18n(app.modules.validate_sensors.name)@", message = "@i18n(app.modules.validate_sensors.msg_repair_fin)@", buttons = buttons, wakeup = function() end, paint = function() end, options = TEXT_LEFT})
         end
     end
 
-    invalidSensors = inavadmin.tasks.telemetry.validateSensors()
+    invalidSensors = inavsuite.tasks.telemetry.validateSensors()
 
     for i, v in ipairs(sensorList) do
 
-        local field = inavadmin.app.formFields and inavadmin.app.formFields[v.key]
+        local field = inavsuite.app.formFields and inavsuite.app.formFields[v.key]
         if field then
             if sensorKeyExists(v.key, invalidSensors) then
                 if v.mandatory == true then
@@ -193,7 +193,7 @@ local function wakeup()
         progressLoader:closeAllowed(false)
         progressLoaderCounter = 0
 
-        API = inavadmin.tasks.msp.api.load("TELEMETRY_CONFIG")
+        API = inavsuite.tasks.msp.api.load("TELEMETRY_CONFIG")
         API.setUUID("550e8400-e29b-41d4-a716-446655440000")
         API.setCompleteHandler(function(self, buf)
             local data = API.data()
@@ -203,11 +203,11 @@ local function wakeup()
         repairSensors = false
     end
 
-    if inavadmin.app.formNavigationFields['tool'] then
-        if inavadmin.session and inavadmin.session.apiVersion and inavadmin.utils.apiVersionCompare("<", "2.04") then
-            inavadmin.app.formNavigationFields['tool']:enable(false)
+    if inavsuite.app.formNavigationFields['tool'] then
+        if inavsuite.session and inavsuite.session.apiVersion and inavsuite.utils.apiVersionCompare("<", "2.04") then
+            inavsuite.app.formNavigationFields['tool']:enable(false)
         else
-            inavadmin.app.formNavigationFields['tool']:enable(true)
+            inavsuite.app.formNavigationFields['tool']:enable(true)
         end
     end
 
@@ -247,14 +247,14 @@ end
 local function event(widget, category, value, x, y)
 
     if category == EVT_CLOSE and value == 0 or value == 35 then
-        inavadmin.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
+        inavsuite.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
         return true
     end
 end
 
 local function onNavMenu()
-    inavadmin.app.ui.progressDisplay(nil, nil, true)
-    inavadmin.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
+    inavsuite.app.ui.progressDisplay(nil, nil, true)
+    inavsuite.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
 end
 
 return {reboot = false, eepromWrite = false, minBytes = 0, wakeup = wakeup, refreshswitch = false, simulatorResponse = {}, postLoad = postLoad, postRead = postRead, openPage = openPage, onNavMenu = onNavMenu, event = event, navButtons = {menu = true, save = false, reload = false, tool = false, help = false}, API = {}}

@@ -3,9 +3,9 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
-local function proto() return inavadmin.tasks.msp.protocol end
+local function proto() return inavsuite.tasks.msp.protocol end
 local function maxTx() return proto().maxTxBufferSize end
 local function maxRx() return proto().maxRxBufferSize end
 

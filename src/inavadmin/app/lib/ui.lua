@@ -3,19 +3,19 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local ui = {}
 
 local arg = {...}
 local config = arg[1]
-local preferences = inavadmin.preferences
-local utils = inavadmin.utils
-local tasks = inavadmin.tasks
+local preferences = inavsuite.preferences
+local utils = inavsuite.utils
+local tasks = inavsuite.tasks
 
 function ui.progressDisplay(title, message, speed)
 
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     if app.dialogs.progressDisplay then return end
 
@@ -35,7 +35,7 @@ function ui.progressDisplay(title, message, speed)
         message = message,
         close = function() end,
         wakeup = function()
-            local app = inavadmin.app
+            local app = inavsuite.app
 
             app.dialogs.progress:value(app.dialogs.progressCounter)
 
@@ -43,15 +43,15 @@ function ui.progressDisplay(title, message, speed)
             if app.dialogs.progressSpeed then mult = 1.5 end
 
             local isProcessing = (app.Page and app.Page.apidata and app.Page.apidata.apiState and app.Page.apidata.apiState.isProcessing) or false
-            local apiV = tostring(inavadmin.session.apiVersion)
+            local apiV = tostring(inavsuite.session.apiVersion)
 
             if not app.triggers.closeProgressLoader then
                 app.dialogs.progressCounter = app.dialogs.progressCounter + (2 * mult)
-                if app.dialogs.progressCounter > 50 and inavadmin.session.apiVersion and not utils.stringInArray(inavadmin.config.supportedMspApiVersion, apiV) then print("No API version yet") end
+                if app.dialogs.progressCounter > 50 and inavsuite.session.apiVersion and not utils.stringInArray(inavsuite.config.supportedMspApiVersion, apiV) then print("No API version yet") end
             elseif isProcessing then
                 app.dialogs.progressCounter = app.dialogs.progressCounter + (3 * mult)
             elseif app.triggers.closeProgressLoader and tasks.msp and tasks.msp.mspQueue:isProcessed() then
-                if inavadmin.preferences.general.hs_loader == 0 then mult = mult * 2  end
+                if inavsuite.preferences.general.hs_loader == 0 then mult = mult * 2  end
                 app.dialogs.progressCounter = app.dialogs.progressCounter + (15 * mult)
                 if app.dialogs.progressCounter >= 100 then
                     app.dialogs.progress:close()
@@ -61,7 +61,7 @@ function ui.progressDisplay(title, message, speed)
 
                 end
             elseif app.triggers.closeProgressLoader and app.triggers.closeProgressLoaderNoisProcessed then
-                if inavadmin.preferences.general.hs_loader == 0 then mult = mult * 1.5  end 
+                if inavsuite.preferences.general.hs_loader == 0 then mult = mult * 1.5  end 
                 app.dialogs.progressCounter = app.dialogs.progressCounter + (15 * mult)
                 if app.dialogs.progressCounter >= 100 then
                     app.dialogs.progress:close()
@@ -106,7 +106,7 @@ function ui.progressDisplay(title, message, speed)
 end
 
 function ui.progressDisplaySave(message)
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     app.dialogs.saveDisplay = true
     app.dialogs.saveWatchDog = os.clock()
@@ -121,7 +121,7 @@ function ui.progressDisplaySave(message)
         message = resolvedMessage,
         close = function() end,
         wakeup = function()
-            local app = inavadmin.app
+            local app = inavsuite.app
 
             app.dialogs.save:value(app.dialogs.saveProgressCounter)
 
@@ -178,14 +178,14 @@ end
 
 function ui.progressDisplayIsActive()
 
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     return app.dialogs.progressDisplay or app.dialogs.saveDisplay or app.dialogs.progressDisplayEsc or app.dialogs.nolinkDisplay or app.dialogs.badversionDisplay
 end
 
 function ui.disableAllFields()
 
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     for i = 1, #app.formFields do
         local field = app.formFields[i]
@@ -195,28 +195,28 @@ end
 
 function ui.enableAllFields()
 
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     for _, field in ipairs(app.formFields) do if type(field) == "userdata" then field:enable(true) end end
 end
 
 function ui.disableAllNavigationFields()
 
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     for _, v in pairs(app.formNavigationFields) do v:enable(false) end
 end
 
 function ui.enableAllNavigationFields()
 
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     for _, v in pairs(app.formNavigationFields) do v:enable(true) end
 end
 
 function ui.enableNavigationField(x)
 
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     local field = app.formNavigationFields[x]
     if field then field:enable(true) end
@@ -224,14 +224,14 @@ end
 
 function ui.disableNavigationField(x)
 
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     local field = app.formNavigationFields[x]
     if field then field:enable(false) end
 end
 
 function ui.resetPageState(activesection)
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     if app.formFields then
         for i = 1, #app.formFields do
@@ -283,7 +283,7 @@ function ui.resetPageState(activesection)
         app.Page.apidata = nil
     end
 
-    inavadmin.tasks.msp.api.resetApidata()
+    inavsuite.tasks.msp.api.resetApidata()
 
     app.formFieldsOffline = {}
     app.formFieldsBGTask = {}
@@ -296,7 +296,7 @@ function ui.resetPageState(activesection)
     app.lastTitle = nil
     app.lastScript = nil
 
-    inavadmin.session.lastPage = nil
+    inavsuite.session.lastPage = nil
     app.triggers.isReady = false
     app.uiState = app.uiStatus.mainMenu
     app.triggers.disableRssiTimeout = false
@@ -325,7 +325,7 @@ function ui.resetPageState(activesection)
 end
 
 function ui.openMainMenu()
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     ui.resetPageState()
 
@@ -431,7 +431,7 @@ end
 
 function ui.openMainMenuSub(activesection)
 
-    local app = inavadmin.app
+    local app = inavsuite.app
     ui.resetPageState(activesection)
 
 
@@ -483,7 +483,7 @@ function ui.openMainMenuSub(activesection)
                 paint = function() end,
                 press = function()
                     app.lastIdx = nil
-                    inavadmin.session.lastPage = nil
+                    inavsuite.session.lastPage = nil
                     if app.Page and app.Page.onNavMenu then app.Page.onNavMenu(app.Page) end
                     app.ui.openMainMenu()
                 end
@@ -549,7 +549,7 @@ function ui.getLabel(id, page)
 end
 
 function ui.fieldBoolean(i)
-    local app = inavadmin.app
+    local app = inavsuite.app
     local page = app.Page
     local fields = page.apidata.formdata.fields
     local f = fields[i]
@@ -612,7 +612,7 @@ function ui.fieldBoolean(i)
 end
 
 function ui.fieldChoice(i)
-    local app = inavadmin.app
+    local app = inavsuite.app
     local page = app.Page
     local fields = page.apidata.formdata.fields
     local f = fields[i]
@@ -657,7 +657,7 @@ function ui.fieldChoice(i)
 end
 
 function ui.fieldSlider(i)
-    local app = inavadmin.app
+    local app = inavsuite.app
     local page = app.Page
     local fields = page.apidata.formdata.fields
     local f = fields[i]
@@ -727,7 +727,7 @@ function ui.fieldSlider(i)
 end
 
 function ui.fieldNumber(i)
-    local app = inavadmin.app
+    local app = inavsuite.app
     local page = app.Page
     local fields = page.apidata.formdata.fields
     local f = fields[i]
@@ -814,7 +814,7 @@ function ui.fieldNumber(i)
 end
 
 function ui.fieldSource(i)
-    local app = inavadmin.app
+    local app = inavsuite.app
     local page = app.Page
     local fields = page.apidata.formdata.fields
     local f = fields[i]
@@ -877,7 +877,7 @@ function ui.fieldSource(i)
 end
 
 function ui.fieldSensor(i)
-    local app = inavadmin.app
+    local app = inavsuite.app
     local page = app.Page
     local fields = page.apidata.formdata.fields
     local f = fields[i]
@@ -940,7 +940,7 @@ function ui.fieldSensor(i)
 end
 
 function ui.fieldColor(i)
-    local app = inavadmin.app
+    local app = inavsuite.app
     local page = app.Page
     local fields = page.apidata.formdata.fields
     local f = fields[i]
@@ -1007,7 +1007,7 @@ function ui.fieldColor(i)
 end
 
 function ui.fieldSwitch(i)
-    local app = inavadmin.app
+    local app = inavsuite.app
     local page = app.Page
     local fields = page.apidata.formdata.fields
     local f = fields[i]
@@ -1070,7 +1070,7 @@ function ui.fieldSwitch(i)
 end
 
 function ui.fieldStaticText(i)
-    local app = inavadmin.app
+    local app = inavsuite.app
     local page = app.Page
     local fields = page.apidata.formdata.fields
     local f = fields[i]
@@ -1107,7 +1107,7 @@ function ui.fieldStaticText(i)
 end
 
 function ui.fieldText(i)
-    local app = inavadmin.app
+    local app = inavsuite.app
     local page = app.Page
     local fields = page.apidata.formdata.fields
     local f = fields[i]
@@ -1162,7 +1162,7 @@ function ui.fieldText(i)
 end
 
 function ui.fieldLabel(f, i, l)
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     if f.t then
         if f.t2 then f.t = f.t2 end
@@ -1186,7 +1186,7 @@ function ui.fieldLabel(f, i, l)
 end
 
 function ui.fieldHeader(title)
-    local app = inavadmin.app
+    local app = inavsuite.app
     local radio = app.radio
     local formFields = app.formFields
     local lcdWidth = app.lcdWidth
@@ -1209,7 +1209,7 @@ function ui.fieldHeader(title)
 end
 
 function ui.openPageRefresh(idx, title, script, extra1, extra2, extra3, extra5, extra6)
-    local app = inavadmin.app
+    local app = inavsuite.app
     app.triggers.isReady = false
 end
 
@@ -1232,7 +1232,7 @@ function ui.openPage(idx, title, script, extra1, extra2, extra3, extra5, extra6)
 
     utils.reportMemoryUsage("ui.openPage: " .. script, "start")
 
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     app.uiState = app.uiStatus.pages
     app.triggers.isReady = false
@@ -1263,7 +1263,7 @@ function ui.openPage(idx, title, script, extra1, extra2, extra3, extra5, extra6)
     app.lastScript = script
 
     form.clear()
-    inavadmin.session.lastPage = script
+    inavsuite.session.lastPage = script
 
     local pageTitle = app.Page.pageTitle or title
     app.ui.fieldHeader(pageTitle)
@@ -1278,7 +1278,7 @@ function ui.openPage(idx, title, script, extra1, extra2, extra3, extra5, extra6)
     if app.Page.apidata.formdata.fields then
         for i, field in ipairs(app.Page.apidata.formdata.fields) do
             local label = app.Page.apidata.formdata.labels
-            if inavadmin.session.apiVersion == nil then return end
+            if inavsuite.session.apiVersion == nil then return end
 
             local valid = (field.apiversion == nil or utils.apiVersionCompare(">=", field.apiversion)) and (field.apiversionlt == nil or utils.apiVersionCompare("<", field.apiversionlt)) and (field.apiversiongt == nil or utils.apiVersionCompare(">", field.apiversiongt)) and (field.apiversionlte == nil or utils.apiVersionCompare("<=", field.apiversionlte)) and (field.apiversiongte == nil or utils.apiVersionCompare(">=", field.apiversiongte)) and
                               (field.enablefunction == nil or field.enablefunction())
@@ -1324,7 +1324,7 @@ end
 
 function ui.navigationButtons(x, y, w, h)
 
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     local xOffset = 0
     local padding = 5
@@ -1443,15 +1443,15 @@ end
 
 function ui.openPageHelp(txtData, section)
 
-    local app = inavadmin.app
+    local app = inavsuite.app
 
     local message = table.concat(txtData, "\r\n\r\n")
     form.openDialog({width = app.lcdWidth, title = "Help - " .. app.lastTitle, message = message, buttons = {{label = "@i18n(app.btn_close)@", action = function() return true end}}, options = TEXT_LEFT})
 end
 
 function ui.injectApiAttributes(formField, f, v)
-    local utils = inavadmin.utils
-    local app = inavadmin.app
+    local utils = inavsuite.utils
+    local app = inavsuite.app
     local log = utils.log
 
     if v.decimals and not f.decimals then
@@ -1542,12 +1542,12 @@ end
 
 function ui.mspApiUpdateFormAttributes()
 
-    local app = inavadmin.app
-    local values = inavadmin.tasks.msp.api.apidata.values
-    local structure = inavadmin.tasks.msp.api.apidata.structure
+    local app = inavsuite.app
+    local values = inavsuite.tasks.msp.api.apidata.values
+    local structure = inavsuite.tasks.msp.api.apidata.structure
 
-    local app = inavadmin.app
-    local utils = inavadmin.utils
+    local app = inavsuite.app
+    local utils = inavsuite.utils
     local log = utils.log
 
     if not (app.Page.apidata.formdata and app.Page.apidata.api and app.Page.apidata.formdata.fields) then
@@ -1650,7 +1650,7 @@ function ui.mspApiUpdateFormAttributes()
 end
 
 function ui.requestPage()
-    local app = inavadmin.app
+    local app = inavsuite.app
     local log = utils.log
 
     if not app.Page.apidata then return end
@@ -1670,14 +1670,14 @@ function ui.requestPage()
     end
     state.isProcessing = true
 
-    if not inavadmin.tasks.msp.api.apidata.values then
+    if not inavsuite.tasks.msp.api.apidata.values then
         log("requestPage Initialize values on first run", "debug")
-        inavadmin.tasks.msp.api.apidata.values = {}
-        inavadmin.tasks.msp.api.apidata.structure = {}
-        inavadmin.tasks.msp.api.apidata.receivedBytesCount = {}
-        inavadmin.tasks.msp.api.apidata.receivedBytes = {}
-        inavadmin.tasks.msp.api.apidata.positionmap = {}
-        inavadmin.tasks.msp.api.apidata.other = {}
+        inavsuite.tasks.msp.api.apidata.values = {}
+        inavsuite.tasks.msp.api.apidata.structure = {}
+        inavsuite.tasks.msp.api.apidata.receivedBytesCount = {}
+        inavsuite.tasks.msp.api.apidata.receivedBytes = {}
+        inavsuite.tasks.msp.api.apidata.positionmap = {}
+        inavsuite.tasks.msp.api.apidata.other = {}
     end
 
     if state.currentIndex == nil then state.currentIndex = 1 end
@@ -1773,12 +1773,12 @@ function ui.requestPage()
                 return
             end
             log("[SUCCESS] API: " .. apiKey .. " completed successfully.", "debug")
-            inavadmin.tasks.msp.api.apidata.values[apiKey] = API.data().parsed
-            inavadmin.tasks.msp.api.apidata.structure[apiKey] = API.data().structure
-            inavadmin.tasks.msp.api.apidata.receivedBytes[apiKey] = API.data().buffer
-            inavadmin.tasks.msp.api.apidata.receivedBytesCount[apiKey] = API.data().receivedBytesCount
-            inavadmin.tasks.msp.api.apidata.positionmap[apiKey] = API.data().positionmap
-            inavadmin.tasks.msp.api.apidata.other[apiKey] = API.data().other or {}
+            inavsuite.tasks.msp.api.apidata.values[apiKey] = API.data().parsed
+            inavsuite.tasks.msp.api.apidata.structure[apiKey] = API.data().structure
+            inavsuite.tasks.msp.api.apidata.receivedBytes[apiKey] = API.data().buffer
+            inavsuite.tasks.msp.api.apidata.receivedBytesCount[apiKey] = API.data().receivedBytesCount
+            inavsuite.tasks.msp.api.apidata.positionmap[apiKey] = API.data().positionmap
+            inavsuite.tasks.msp.api.apidata.other[apiKey] = API.data().other or {}
             app.Page.apidata.retryCount[apiKey] = 0
             state.currentIndex = state.currentIndex + 1
             API = nil
@@ -1815,7 +1815,7 @@ end
 
 function ui.saveSettings()
 
-    local app = inavadmin.app
+    local app = inavsuite.app
     local log = utils.log
 
     if app.pageState == app.pageStatus.saving then return end
@@ -1827,7 +1827,7 @@ function ui.saveSettings()
 
     local mspapi = app.Page.apidata
     local apiList = mspapi.api
-    local values = inavadmin.tasks.msp.api.apidata.values
+    local values = inavsuite.tasks.msp.api.apidata.values
 
     local totalRequests = #apiList
     local completedRequests = 0
@@ -1841,7 +1841,7 @@ function ui.saveSettings()
         utils.reportMemoryUsage("ui.saveSettings " .. apiNAME, "start")
 
         local payloadData = values[apiNAME]
-        local payloadStructure = inavadmin.tasks.msp.api.apidata.structure[apiNAME]
+        local payloadStructure = inavsuite.tasks.msp.api.apidata.structure[apiNAME]
 
         local API = tasks.msp.api.load(apiNAME)
         API.setErrorHandler(function(self, buf) app.triggers.saveFailed = true end)
@@ -1904,8 +1904,8 @@ function ui.saveSettings()
 end
 
 function ui.rebootFc()
-    local app = inavadmin.app
-    local utils = inavadmin.utils
+    local app = inavsuite.app
+    local utils = inavsuite.utils
 
     app.pageState = app.pageStatus.rebooting
     tasks.msp.mspQueue:add({
@@ -1920,17 +1920,17 @@ end
 
 function ui.adminStatsOverlay()
 
-    local app = inavadmin.app
-    local utils = inavadmin.utils
+    local app = inavsuite.app
+    local utils = inavsuite.utils
 
-    if inavadmin.preferences and preferences.developer and preferences.developer.overlaystatsadmin then
+    if inavsuite.preferences and preferences.developer and preferences.developer.overlaystatsadmin then
 
         lcd.font(FONT_XXS)
         lcd.color(lcd.RGB(255, 255, 255))
 
-        local cpuUsage = (inavadmin.performance and inavadmin.performance.cpuload) or 0
-        local ramUsed = (inavadmin.performance and inavadmin.performance.usedram) or 0
-        local luaRamKB = (inavadmin.performance and inavadmin.performance.luaRamKB) or 0
+        local cpuUsage = (inavsuite.performance and inavsuite.performance.cpuload) or 0
+        local ramUsed = (inavsuite.performance and inavsuite.performance.usedram) or 0
+        local luaRamKB = (inavsuite.performance and inavsuite.performance.luaRamKB) or 0
 
         local cfg = {startY = app.radio.navbuttonHeight + 3, decimalsKB = 0, labelGap = 4, blocks = {LOAD = {x = 0, valueRight = 50}, USED = {x = 70, valueRight = 130}, FREE = {x = 160, valueRight = 230}}}
 

@@ -3,24 +3,24 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local pages = {}
 local sections = loadfile("app/modules/sections.lua")()
 
-if inavadmin.app.moduleList == nil then inavadmin.app.moduleList = inavadmin.utils.findModules() end
+if inavsuite.app.moduleList == nil then inavsuite.app.moduleList = inavsuite.utils.findModules() end
 
 local function findSectionIndex(sectionTitle)
     for index, section in ipairs(sections) do if section.id == sectionTitle then return index end end
     return nil
 end
 
-for _, module in ipairs(inavadmin.app.moduleList) do
+for _, module in ipairs(inavsuite.app.moduleList) do
     local sectionIndex = findSectionIndex(module.section)
     if sectionIndex then
         pages[#pages + 1] = {title = module.title, section = sectionIndex, script = module.script, order = module.order or 0, image = module.image, folder = module.folder, ethosversion = module.ethosversion, mspversion = module.mspversion, apiform = module.apiform, offline = module.offline or false}
     else
-        inavadmin.utils.log("Warning: Section '" .. module.section .. "' not found for module '" .. module.title .. "'", "debug")
+        inavsuite.utils.log("Warning: Section '" .. module.section .. "' not found for module '" .. module.title .. "'", "debug")
     end
 end
 

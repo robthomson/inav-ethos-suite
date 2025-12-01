@@ -3,10 +3,10 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = {session = {}}
-package.loaded.inavadmin = inavadmin
+local inavsuite = {session = {}}
+package.loaded.inavsuite = inavsuite
 
-local _ENV = setmetatable({inavadmin = inavadmin}, {__index = _G, __newindex = function(_, k) print("attempt to create global '" .. tostring(k) .. "'", 2) end})
+local _ENV = setmetatable({inavsuite = inavsuite}, {__index = _G, __newindex = function(_, k) print("attempt to create global '" .. tostring(k) .. "'", 2) end})
 
 if not FONT_STD then FONT_STD = FONT_STD end
 
@@ -19,8 +19,8 @@ local config = {
     version = {major = 0, minor = 0, revision = 0, suffix = "20251010"},
     ethosVersion = {1, 6, 2},
     supportedMspApiVersion = {"2.04", "2.05"},
-    baseDir = "inavadmin",
-    preferences = "inavadmin.user",
+    baseDir = "inavsuite",
+    preferences = "inavsuite.user",
     defaultRateProfile = 4,
     watchdogParam = 10,
     mspProtocolVersion = 2,
@@ -29,13 +29,13 @@ local config = {
 
 config.ethosVersionString = string.format("ETHOS < V%d.%d.%d", table.unpack(config.ethosVersion))
 
-inavadmin.config = config
+inavsuite.config = config
 
 local performance = {cpuload = 0, freeram = 0, mainStackKB = 0, ramKB = 0, luaRamKB = 0, luaBitmapsRamKB = 0}
 
-inavadmin.performance = performance
+inavsuite.performance = performance
 
-inavadmin.ini = assert(loadfile("lib/ini.lua", "t", _ENV))(config)
+inavsuite.ini = assert(loadfile("lib/ini.lua", "t", _ENV))(config)
 
 local userpref_defaults = {
     general = {iconsize = 2, syncname = false, gimbalsupression = 0.85, txbatt_type = 0, hs_loader = 0},
@@ -48,46 +48,46 @@ local userpref_defaults = {
     menulastselected = {}
 }
 
-local prefs_dir = "SCRIPTS:/" .. inavadmin.config.preferences
+local prefs_dir = "SCRIPTS:/" .. inavsuite.config.preferences
 os.mkdir(prefs_dir)
 local userpref_file = prefs_dir .. "/preferences.ini"
 
-local master_ini = inavadmin.ini.load_ini_file(userpref_file) or {}
-local updated_ini = inavadmin.ini.merge_ini_tables(master_ini, userpref_defaults)
-inavadmin.preferences = updated_ini
+local master_ini = inavsuite.ini.load_ini_file(userpref_file) or {}
+local updated_ini = inavsuite.ini.merge_ini_tables(master_ini, userpref_defaults)
+inavsuite.preferences = updated_ini
 
-if not inavadmin.ini.ini_tables_equal(master_ini, updated_ini) then inavadmin.ini.save_ini_file(userpref_file, updated_ini) end
+if not inavsuite.ini.ini_tables_equal(master_ini, updated_ini) then inavsuite.ini.save_ini_file(userpref_file, updated_ini) end
 
-inavadmin.config.bgTaskName = inavadmin.config.toolName .. " [Background]"
-inavadmin.config.bgTaskKey = "inavbg"
+inavsuite.config.bgTaskName = inavsuite.config.toolName .. " [Background]"
+inavsuite.config.bgTaskKey = "inavbg"
 
-inavadmin.utils = assert(loadfile("lib/utils.lua"))(inavadmin.config)
+inavsuite.utils = assert(loadfile("lib/utils.lua"))(inavsuite.config)
 
-inavadmin.app = assert(loadfile("app/app.lua"))(inavadmin.config)
+inavsuite.app = assert(loadfile("app/app.lua"))(inavsuite.config)
 
-inavadmin.tasks = assert(loadfile("tasks/tasks.lua"))(inavadmin.config)
+inavsuite.tasks = assert(loadfile("tasks/tasks.lua"))(inavsuite.config)
 
-inavadmin.flightmode = {current = "preflight"}
-inavadmin.utils.session()
+inavsuite.flightmode = {current = "preflight"}
+inavsuite.utils.session()
 
-inavadmin.simevent = {telemetry_state = true}
+inavsuite.simevent = {telemetry_state = true}
 
-function inavadmin.version()
-    local v = inavadmin.config.version
+function inavsuite.version()
+    local v = inavsuite.config.version
     return {version = string.format("%d.%d.%d-%s", v.major, v.minor, v.revision, v.suffix), major = v.major, minor = v.minor, revision = v.revision, suffix = v.suffix}
 end
 
 local function unsupported_tool()
     return {
-        name = inavadmin.config.toolName,
-        icon = inavadmin.config.icon_unsupported,
+        name = inavsuite.config.toolName,
+        icon = inavsuite.config.icon_unsupported,
         create = function() end,
         wakeup = function() lcd.invalidate() end,
         paint = function()
             local w, h = lcd.getWindowSize()
             lcd.color(lcd.RGB(255, 255, 255, 1))
             lcd.font(FONT_STD)
-            local msg = inavadmin.config.ethosVersionString
+            local msg = inavsuite.config.ethosVersionString
             local tw, th = lcd.getTextSize(msg)
             lcd.drawText((w - tw) / 2, (h - th) / 2, msg)
         end,
@@ -97,8 +97,8 @@ end
 
 local function unsupported_i18n()
     return {
-        name = inavadmin.config.toolName,
-        icon = inavadmin.config.icon_unsupported,
+        name = inavsuite.config.toolName,
+        icon = inavsuite.config.icon_unsupported,
         create = function() end,
         wakeup = function() lcd.invalidate() end,
         paint = function()
@@ -113,36 +113,36 @@ local function unsupported_i18n()
     }
 end
 
-local function register_main_tool() system.registerSystemTool({event = inavadmin.app.event, name = inavadmin.config.toolName, icon = inavadmin.config.icon, create = inavadmin.app.create, wakeup = inavadmin.app.wakeup, paint = inavadmin.app.paint, close = inavadmin.app.close}) end
+local function register_main_tool() system.registerSystemTool({event = inavsuite.app.event, name = inavsuite.config.toolName, icon = inavsuite.config.icon, create = inavsuite.app.create, wakeup = inavsuite.app.wakeup, paint = inavsuite.app.paint, close = inavsuite.app.close}) end
 
-local function register_bg_task() system.registerTask({name = inavadmin.config.bgTaskName, key = inavadmin.config.bgTaskKey, wakeup = inavadmin.tasks.wakeup, event = inavadmin.tasks.event, init = inavadmin.tasks.init, read = inavadmin.tasks.read, write = inavadmin.tasks.write}) end
+local function register_bg_task() system.registerTask({name = inavsuite.config.bgTaskName, key = inavsuite.config.bgTaskKey, wakeup = inavsuite.tasks.wakeup, event = inavsuite.tasks.event, init = inavsuite.tasks.init, read = inavsuite.tasks.read, write = inavsuite.tasks.write}) end
 
 local function load_widget_cache(cachePath)
     local loadf, loadErr = loadfile(cachePath)
     if not loadf then
-        inavadmin.utils.log("[cache] loadfile failed: " .. tostring(loadErr), "info")
+        inavsuite.utils.log("[cache] loadfile failed: " .. tostring(loadErr), "info")
         return nil
     end
     local ok, cached = pcall(loadf)
     if not ok then
-        inavadmin.utils.log("[cache] execution failed: " .. tostring(cached), "info")
+        inavsuite.utils.log("[cache] execution failed: " .. tostring(cached), "info")
         return nil
     end
     if type(cached) ~= "table" then
-        inavadmin.utils.log("[cache] unexpected content; rebuilding", "info")
+        inavsuite.utils.log("[cache] unexpected content; rebuilding", "info")
         return nil
     end
-    inavadmin.utils.log("[cache] Loaded widget list from cache", "info")
+    inavsuite.utils.log("[cache] Loaded widget list from cache", "info")
     return cached
 end
 
 local function build_widget_cache(widgetList, cacheFile)
-    inavadmin.utils.createCacheFile(widgetList, cacheFile, true)
-    inavadmin.utils.log("[cache] Created new widgets cache file", "info")
+    inavsuite.utils.createCacheFile(widgetList, cacheFile, true)
+    inavsuite.utils.log("[cache] Created new widgets cache file", "info")
 end
 
 local function register_widgets(widgetList)
-    inavadmin.widgets = {}
+    inavsuite.widgets = {}
     local dupCount = {}
 
     for _, v in ipairs(widgetList) do
@@ -151,11 +151,11 @@ local function register_widgets(widgetList)
             local scriptModule = assert(loadfile(path))(config)
 
             local base = v.varname or v.script:gsub("%.lua$", "")
-            if inavadmin.widgets[base] then
+            if inavsuite.widgets[base] then
                 dupCount[base] = (dupCount[base] or 0) + 1
                 base = string.format("%s_dup%02d", base, dupCount[base])
             end
-            inavadmin.widgets[base] = scriptModule
+            inavsuite.widgets[base] = scriptModule
 
             system.registerWidget({name = v.name, key = v.key, event = scriptModule.event, create = scriptModule.create, paint = scriptModule.paint, wakeup = scriptModule.wakeup, build = scriptModule.build, close = scriptModule.close, configure = scriptModule.configure, read = scriptModule.read, write = scriptModule.write, persistent = scriptModule.persistent or false, menu = scriptModule.menu, title = scriptModule.title})
         end
@@ -163,9 +163,9 @@ local function register_widgets(widgetList)
 end
 
 local function init()
-    local cfg = inavadmin.config
+    local cfg = inavsuite.config
 
-    if not inavadmin.utils.ethosVersionAtLeast() then
+    if not inavsuite.utils.ethosVersionAtLeast() then
         system.registerSystemTool(unsupported_tool())
         return
     end
@@ -184,7 +184,7 @@ local function init()
     local widgetList = load_widget_cache(cachePath)
 
     if not widgetList then
-        widgetList = inavadmin.utils.findWidgets()
+        widgetList = inavsuite.utils.findWidgets()
         build_widget_cache(widgetList, cacheFile)
     end
 

@@ -32,13 +32,13 @@ Before running the app or building, set the following environment variables:
 ### `FRSKY_INAVADMIN_GIT_SRC`
 - Path to the root of the Inav INAVADMIN source repo.
 - Must contain:
-  - `scripts\inavadmin\tasks\telemetry\telemetry.lua`
+  - `scripts\inavsuite\tasks\telemetry\telemetry.lua`
   - `bin\i18n\json\telemetry\en.json`
 
 ### `FRSKY_SIM_SRC`
 - One or more comma-separated paths to the simulated sensor output directories.
 - Each must allow writing Lua scripts to:
-  - `inavadmin\sim\sensors\<sensor>.lua`
+  - `inavsuite\sim\sensors\<sensor>.lua`
 
 **Example:**
 ```bat

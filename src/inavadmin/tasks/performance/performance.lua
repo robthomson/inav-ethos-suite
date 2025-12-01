@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local arg = {...}
 local config = arg and arg[1]
@@ -73,7 +73,7 @@ function performance.wakeup()
         else
             mem_avg_kb = clamp(MEM_ALPHA * free_lua_kb + (1 - MEM_ALPHA) * mem_avg_kb, 0, 1e12)
         end
-        inavadmin.performance.freeram = mem_avg_kb
+        inavsuite.performance.freeram = mem_avg_kb
 
         local gc_total_kb = clamp(collectgarbage("count") or 0, 0, 1e12)
         if usedram_avg_kb == nil then
@@ -81,19 +81,19 @@ function performance.wakeup()
         else
             usedram_avg_kb = clamp(MEM_ALPHA * gc_total_kb + (1 - MEM_ALPHA) * usedram_avg_kb, 0, 1e12)
         end
-        inavadmin.performance.usedram = usedram_avg_kb
+        inavsuite.performance.usedram = usedram_avg_kb
 
         if free_bmp_kb > bitmap_pool_est_kb then bitmap_pool_est_kb = free_bmp_kb end
-        inavadmin.performance.luaBitmapsRamKB = free_bmp_kb
+        inavsuite.performance.luaBitmapsRamKB = free_bmp_kb
 
-        inavadmin.performance.mainStackKB = (m.mainStackAvailable or 0) / 1024
-        inavadmin.performance.ramKB = (m.ramAvailable or 0) / 1024
-        inavadmin.performance.luaRamKB = (m.luaRamAvailable or 0) / 1024
-        inavadmin.performance.luaBitmapsRamKB = (m.luaBitmapsRamAvailable or 0) / 1024
+        inavsuite.performance.mainStackKB = (m.mainStackAvailable or 0) / 1024
+        inavsuite.performance.ramKB = (m.ramAvailable or 0) / 1024
+        inavsuite.performance.luaRamKB = (m.luaRamAvailable or 0) / 1024
+        inavsuite.performance.luaBitmapsRamKB = (m.luaBitmapsRamAvailable or 0) / 1024
     end
 
-    inavadmin.performance = inavadmin.performance or {}
-    local loop_ms = tonumber(inavadmin.performance.taskLoopCpuMs) or tonumber(inavadmin.performance.taskLoopTime) or 0
+    inavsuite.performance = inavsuite.performance or {}
+    local loop_ms = tonumber(inavsuite.performance.taskLoopCpuMs) or tonumber(inavsuite.performance.taskLoopTime) or 0
     local budget_ms = SCHED_DT * 1000.0
 
     local instant_util = 0
@@ -108,7 +108,7 @@ function performance.wakeup()
 
         if window_util < 0 then window_util = 0 end
         if window_util > 1 then window_util = 1 end
-        inavadmin.performance.cpuload_window100 = window_util * 100
+        inavsuite.performance.cpuload_window100 = window_util * 100
 
         win_sum_ms, win_budget_ms, win_t = 0, 0, 0
     end
@@ -123,12 +123,12 @@ function performance.wakeup()
     local alpha = 1 - math.exp(-dt / CPU_TAU)
     cpu_avg = alpha * instant_util + (1 - alpha) * cpu_avg
 
-    inavadmin.performance.cpuload = clamp(cpu_avg * 100, 0, 100)
+    inavsuite.performance.cpuload = clamp(cpu_avg * 100, 0, 100)
 
-    inavadmin.performance.loop_ms = loop_ms
-    inavadmin.performance.budget_ms = budget_ms
-    inavadmin.performance.util_raw = instant_util * 100
-    inavadmin.performance.tick_ms = dt * 1000.0
+    inavsuite.performance.loop_ms = loop_ms
+    inavsuite.performance.budget_ms = budget_ms
+    inavsuite.performance.util_raw = instant_util * 100
+    inavsuite.performance.tick_ms = dt * 1000.0
 
     last_wakeup_start = t_now
 end

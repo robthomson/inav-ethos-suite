@@ -1,5 +1,5 @@
 {
-  "tgt_name": "inavadmin",
+  "tgt_name": "inavsuite",
   "ethossuite_bin": "C:\\Program Files\\Ethos Suite\\Ethos Suite.exe",
   "serial_vid": "0483",
   "serial_pid": "5750",

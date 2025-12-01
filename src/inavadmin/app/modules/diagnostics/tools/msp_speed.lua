@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local line = {}
 local fields = {}
@@ -37,21 +37,21 @@ local RateLimit = os.clock()
 local Rate = 0.25
 
 local function getMSPBattery()
-    local API = inavadmin.tasks.msp.api.load("BATTERY_CONFIG")
+    local API = inavsuite.tasks.msp.api.load("BATTERY_CONFIG")
     API.setCompleteHandler(function(self, buf) doNextMsp = true end)
     API.setUUID("a3f9c2b4-5d7e-4e8a-9c3b-2f6d8e7a1b2d")
     API.read()
 end
 
 local function getMSPGovernor()
-    local API = inavadmin.tasks.msp.api.load("GOVERNOR_CONFIG")
+    local API = inavsuite.tasks.msp.api.load("GOVERNOR_CONFIG")
     API.setCompleteHandler(function(self, buf) doNextMsp = true end)
     API.setUUID("e2a1c5b3-7f4a-4c8e-9d2a-3b6f8e2d9a1c")
     API.read()
 end
 
 local function getMSPMixer()
-    local API = inavadmin.tasks.msp.api.load("MIXER_CONFIG")
+    local API = inavsuite.tasks.msp.api.load("MIXER_CONFIG")
     API.setCompleteHandler(function(self, buf) doNextMsp = true end)
     API.setUUID("fbccd634-c9b7-4b48-8c02-08ef560dc515")
     API.read()
@@ -70,7 +70,7 @@ local function getMSP()
         getMSPCount = 0
     end
 
-    local avgQueryTime = inavadmin.utils.round(mspQueryTimeCount / mspSpeedTestStats['total'], 2) .. "s"
+    local avgQueryTime = inavsuite.utils.round(mspQueryTimeCount / mspSpeedTestStats['total'], 2) .. "s"
 
 end
 
@@ -95,7 +95,7 @@ local function updateStats()
         fields['success']:value(tostring(mspSpeedTestStats['success']))
     end
 
-    local avgQueryTime = inavadmin.utils.round(mspQueryTimeCount / mspSpeedTestStats['total'], 2) .. "s"
+    local avgQueryTime = inavsuite.utils.round(mspQueryTimeCount / mspSpeedTestStats['total'], 2) .. "s"
     fields['time']:value(tostring(avgQueryTime))
 
 end
@@ -114,7 +114,7 @@ local function startTest(duration)
         wakeup = function()
             local now = os.clock()
 
-            if inavadmin.session.telemetryState == false and startTest == true and system:getVersion().simulation ~= true then
+            if inavsuite.session.telemetryState == false and startTest == true and system:getVersion().simulation ~= true then
                 if testLoader then
                     testLoader:close()
                     testLoader = nil
@@ -122,7 +122,7 @@ local function startTest(duration)
             end
 
             if formLoaded == true then
-                inavadmin.app.triggers.closeProgressLoader = true
+                inavsuite.app.triggers.closeProgressLoader = true
                 formLoaded = false
             end
 
@@ -134,7 +134,7 @@ local function startTest(duration)
                 updateStats()
             end
 
-            if inavadmin.tasks.msp.mspQueue:isProcessed() and ((now - RateLimit) >= Rate) then
+            if inavsuite.tasks.msp.mspQueue:isProcessed() and ((now - RateLimit) >= Rate) then
                 RateLimit = now
                 mspSpeedTestStats['total'] = mspSpeedTestStats['total'] + 1
                 mspQueryStartTime = os.clock()
@@ -186,14 +186,14 @@ local function openSpeedTestDialog()
 end
 
 local function openPage(pidx, title, script)
-    inavadmin.app.lastIdx = pidx
-    inavadmin.app.lastTitle = title
-    inavadmin.app.lastScript = script
-    inavadmin.app.triggers.closeProgressLoader = true
+    inavsuite.app.lastIdx = pidx
+    inavsuite.app.lastTitle = title
+    inavsuite.app.lastScript = script
+    inavsuite.app.triggers.closeProgressLoader = true
 
     local w, h = lcd.getWindowSize()
 
-    local y = inavadmin.app.radio.linePaddingTop
+    local y = inavsuite.app.radio.linePaddingTop
 
     form.clear()
 
@@ -203,15 +203,15 @@ local function openPage(pidx, title, script)
     local buttonWs = buttonW - (buttonW * 20) / 100
     local x = w - 10
 
-    inavadmin.app.formNavigationFields['menu'] = form.addButton(line, {x = x - 5 - buttonW - buttonWs, y = inavadmin.app.radio.linePaddingTop, w = buttonW, h = inavadmin.app.radio.navbuttonHeight}, {text = "@i18n(app.navigation_menu)@", icon = nil, options = FONT_S, press = function() inavadmin.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua") end})
-    inavadmin.app.formNavigationFields['menu']:focus()
+    inavsuite.app.formNavigationFields['menu'] = form.addButton(line, {x = x - 5 - buttonW - buttonWs, y = inavsuite.app.radio.linePaddingTop, w = buttonW, h = inavsuite.app.radio.navbuttonHeight}, {text = "@i18n(app.navigation_menu)@", icon = nil, options = FONT_S, press = function() inavsuite.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua") end})
+    inavsuite.app.formNavigationFields['menu']:focus()
 
-    inavadmin.app.formNavigationFields['tool'] = form.addButton(line, {x = x - buttonWs, y = inavadmin.app.radio.linePaddingTop, w = buttonWs, h = inavadmin.app.radio.navbuttonHeight}, {text = "*", icon = nil, options = FONT_S, press = function() openSpeedTestDialog() end})
+    inavsuite.app.formNavigationFields['tool'] = form.addButton(line, {x = x - buttonWs, y = inavsuite.app.radio.linePaddingTop, w = buttonWs, h = inavsuite.app.radio.navbuttonHeight}, {text = "*", icon = nil, options = FONT_S, press = function() openSpeedTestDialog() end})
 
-    local posText = {x = x - 5 - buttonW - buttonWs - 5 - buttonWs, y = inavadmin.app.radio.linePaddingTop, w = 200, h = inavadmin.app.radio.navbuttonHeight}
+    local posText = {x = x - 5 - buttonW - buttonWs - 5 - buttonWs, y = inavsuite.app.radio.linePaddingTop, w = 200, h = inavsuite.app.radio.navbuttonHeight}
 
     line['rf'] = form.addLine("@i18n(app.modules.msp_speed.rf_protocol)@")
-    fields['rf'] = form.addStaticText(line['rf'], posText, string.upper(inavadmin.tasks.msp.protocol.mspProtocol))
+    fields['rf'] = form.addStaticText(line['rf'], posText, string.upper(inavsuite.tasks.msp.protocol.mspProtocol))
 
     line['runtime'] = form.addLine("@i18n(app.modules.msp_speed.test_length)@")
     fields['runtime'] = form.addStaticText(line['runtime'], posText, "-")
@@ -275,7 +275,7 @@ end
 local function event(widget, category, value, x, y)
 
     if category == EVT_CLOSE and value == 0 or value == 35 then
-        inavadmin.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
+        inavsuite.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
         return true
     end
 end

@@ -3,7 +3,7 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
 local MspQueueController = {}
 MspQueueController.__index = MspQueueController
@@ -55,9 +55,9 @@ local function cloneMessage(msg)
     return setmetatable(out, getmetatable(msg))
 end
 
-local function LOG_ENABLED_MSP() return inavadmin and inavadmin.preferences and inavadmin.preferences.developer and inavadmin.preferences.developer.logmsp end
+local function LOG_ENABLED_MSP() return inavsuite and inavsuite.preferences and inavsuite.preferences.developer and inavsuite.preferences.developer.logmsp end
 
-local function LOG_ENABLED_MSP_QUEUE() return inavadmin and inavadmin.preferences and inavadmin.preferences.developer and inavadmin.preferences.developer.logmspQueue end
+local function LOG_ENABLED_MSP_QUEUE() return inavsuite and inavsuite.preferences and inavsuite.preferences.developer and inavsuite.preferences.developer.logmspQueue end
 
 function MspQueueController.new(opts)
     opts = opts or {}
@@ -102,28 +102,28 @@ function MspQueueController:processQueue()
     if LOG_ENABLED_MSP_QUEUE() then
         local count = self:queueCount()
         if count ~= lastQueueCount then
-            inavadmin.utils.log("MSP Queue: " .. count .. " messages in queue", "info")
+            inavsuite.utils.log("MSP Queue: " .. count .. " messages in queue", "info")
             lastQueueCount = count
         end
     end
 
     if self:isProcessed() then
-        inavadmin.session.mspBusy = false
+        inavsuite.session.mspBusy = false
         self.mspBusyStart = nil
         return
     end
 
     if self.mspBusyStart and (os.clock() - self.mspBusyStart) > mspBusyTimeout then
-        inavadmin.utils.log("MSP blocked for more than " .. mspBusyTimeout .. " seconds", "info")
-        inavadmin.utils.log(" - Unblocking by setting inavadmin.session.mspBusy = false", "info")
-        inavadmin.session.mspBusy = false
+        inavsuite.utils.log("MSP blocked for more than " .. mspBusyTimeout .. " seconds", "info")
+        inavsuite.utils.log(" - Unblocking by setting inavsuite.session.mspBusy = false", "info")
+        inavsuite.session.mspBusy = false
         self.mspBusyStart = nil
         return
     end
 
-    inavadmin.session.mspBusy = true
+    inavsuite.session.mspBusy = true
 
-    inavadmin.utils.muteSensorLostWarnings()
+    inavsuite.utils.muteSensorLostWarnings()
 
     if not self.currentMessage then
         self.currentMessageStartTime = os.clock()
@@ -133,28 +133,28 @@ function MspQueueController:processQueue()
 
     local cmd, buf, err
 
-    local lastTimeInterval = inavadmin.tasks.msp.protocol.mspIntervalOveride or 0.25
+    local lastTimeInterval = inavsuite.tasks.msp.protocol.mspIntervalOveride or 0.25
     if lastTimeInterval == nil then lastTimeInterval = 1 end
 
     if not system:getVersion().simulation then
 
         if (not self.lastTimeCommandSent) or (self.lastTimeCommandSent + lastTimeInterval < os.clock()) then
             if self.currentMessage then
-                inavadmin.tasks.msp.protocol.mspWrite(self.currentMessage.command, self.currentMessage.payload or {})
+                inavsuite.tasks.msp.protocol.mspWrite(self.currentMessage.command, self.currentMessage.payload or {})
                 self.lastTimeCommandSent = os.clock()
                 self.currentMessageStartTime = self.lastTimeCommandSent
                 self.retryCount = self.retryCount + 1
-                if inavadmin.app.Page and inavadmin.app.Page.mspRetry then inavadmin.app.Page.mspRetry(self) end
+                if inavsuite.app.Page and inavsuite.app.Page.mspRetry then inavsuite.app.Page.mspRetry(self) end
             end
         end
 
-        inavadmin.tasks.msp.common.mspProcessTxQ()
-        cmd, buf, err = inavadmin.tasks.msp.common.mspPollReply()
+        inavsuite.tasks.msp.common.mspProcessTxQ()
+        cmd, buf, err = inavsuite.tasks.msp.common.mspPollReply()
 
     else
 
         if not self.currentMessage.simulatorResponse then
-            if LOG_ENABLED_MSP() then inavadmin.utils.log("No simulator response for command " .. tostring(self.currentMessage.command), "debug") end
+            if LOG_ENABLED_MSP() then inavsuite.utils.log("No simulator response for command " .. tostring(self.currentMessage.command), "debug") end
             self.currentMessage = nil
             self.uuid = nil
             return
@@ -162,13 +162,13 @@ function MspQueueController:processQueue()
         cmd, buf, err = self.currentMessage.command, self.currentMessage.simulatorResponse, nil
         if cmd then
             local rwState = (self.currentMessage.payload and #self.currentMessage.payload > 0) and "WRITE" or "READ"
-            if LOG_ENABLED_MSP() then inavadmin.utils.logMsp(cmd, rwState, self.currentMessage.payload or buf, err) end
+            if LOG_ENABLED_MSP() then inavsuite.utils.logMsp(cmd, rwState, self.currentMessage.payload or buf, err) end
         end
     end
 
     if self.currentMessage and (os.clock() - self.currentMessageStartTime) > (self.currentMessage.timeout or self.timeout) then
         if self.currentMessage.setErrorHandler then self.currentMessage:setErrorHandler() end
-        if LOG_ENABLED_MSP() then inavadmin.utils.log("Message timeout exceeded. Flushing queue.", "debug") end
+        if LOG_ENABLED_MSP() then inavsuite.utils.log("Message timeout exceeded. Flushing queue.", "debug") end
         self.currentMessage = nil
         self.uuid = nil
         return
@@ -182,39 +182,39 @@ function MspQueueController:processQueue()
             self.currentMessage:processReply(buf)
             if cmd and LOG_ENABLED_MSP() then
                 local rwState = (self.currentMessage.payload and #self.currentMessage.payload > 0) and "WRITE" or "READ"
-                inavadmin.utils.logMsp(cmd, rwState, self.currentMessage.payload or buf, err)
+                inavsuite.utils.logMsp(cmd, rwState, self.currentMessage.payload or buf, err)
             end
         end
         self.currentMessage = nil
         self.uuid = nil
-        if inavadmin.app.Page and inavadmin.app.Page.mspSuccess then inavadmin.app.Page.mspSuccess() end
+        if inavsuite.app.Page and inavsuite.app.Page.mspSuccess then inavsuite.app.Page.mspSuccess() end
     elseif self.retryCount > self.maxRetries then
 
         self:clear()
         if self.currentMessage and self.currentMessage.setErrorHandler then self.currentMessage:setErrorHandler() end
-        if inavadmin.app.Page and inavadmin.app.Page.mspTimeout then inavadmin.app.Page.mspTimeout() end
+        if inavsuite.app.Page and inavsuite.app.Page.mspTimeout then inavsuite.app.Page.mspTimeout() end
     end
 end
 
 function MspQueueController:clear()
-    inavadmin.session.mspBusy = false
+    inavsuite.session.mspBusy = false
     self.mspBusyStart = nil
 
     self.queue = newQueue()
     self.currentMessage = nil
     self.uuid = nil
-    inavadmin.tasks.msp.common.mspClearTxBuf()
+    inavsuite.tasks.msp.common.mspClearTxBuf()
 end
 
 function MspQueueController:add(message)
-    if not inavadmin.session.telemetryState then return end
+    if not inavsuite.session.telemetryState then return end
     if not message then
-        if LOG_ENABLED_MSP() then inavadmin.utils.log("Unable to queue - nil message.", "debug") end
+        if LOG_ENABLED_MSP() then inavsuite.utils.log("Unable to queue - nil message.", "debug") end
         return
     end
 
     if message.uuid and self.uuid == message.uuid then
-        if LOG_ENABLED_MSP() then inavadmin.utils.log("Skipping duplicate message with UUID " .. message.uuid, "debug") end
+        if LOG_ENABLED_MSP() then inavsuite.utils.log("Skipping duplicate message with UUID " .. message.uuid, "debug") end
         return
     end
 

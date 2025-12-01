@@ -3,19 +3,19 @@
   GPLv3 — https://www.gnu.org/licenses/gpl-3.0.en.html
 ]] --
 
-local inavadmin = require("inavadmin")
+local inavsuite = require("inavsuite")
 
-local version = inavadmin.version().version
-local ethosVersion = inavadmin.config.environment.major .. "." .. inavadmin.config.environment.minor .. "." .. inavadmin.config.environment.revision
-local apiVersion = inavadmin.session.apiVersion
-local fcVersion = inavadmin.session.fcVersion
-local rfVersion = inavadmin.session.rfVersion
-local mspTransport = (inavadmin.tasks and inavadmin.tasks.msp and inavadmin.tasks.msp.protocol and inavadmin.tasks.msp.protocol.mspProtocol) or "-"
+local version = inavsuite.version().version
+local ethosVersion = inavsuite.config.environment.major .. "." .. inavsuite.config.environment.minor .. "." .. inavsuite.config.environment.revision
+local apiVersion = inavsuite.session.apiVersion
+local fcVersion = inavsuite.session.fcVersion
+local rfVersion = inavsuite.session.rfVersion
+local mspTransport = (inavsuite.tasks and inavsuite.tasks.msp and inavsuite.tasks.msp.protocol and inavsuite.tasks.msp.protocol.mspProtocol) or "-"
 local closeProgressLoader = true
 local simulation
 
 local supportedMspVersion = ""
-for i, v in ipairs(inavadmin.config.supportedMspApiVersion) do
+for i, v in ipairs(inavsuite.config.supportedMspApiVersion) do
     if i == 1 then
         supportedMspVersion = v
     else
@@ -37,7 +37,7 @@ local buttonW = 100
 local buttonWs = buttonW - (buttonW * 20) / 100
 local x = w - 15
 
-displayPos = {x = x - buttonW - buttonWs - 5 - buttonWs, y = inavadmin.app.radio.linePaddingTop, w = 300, h = inavadmin.app.radio.navbuttonHeight}
+displayPos = {x = x - buttonW - buttonWs - 5 - buttonWs, y = inavsuite.app.radio.linePaddingTop, w = 300, h = inavsuite.app.radio.navbuttonHeight}
 
 local apidata = {
     api = {[1] = nil},
@@ -53,7 +53,7 @@ local apidata = {
 
 local function wakeup()
     if closeProgressLoader == false then
-        inavadmin.app.triggers.closeProgressLoader = true
+        inavsuite.app.triggers.closeProgressLoader = true
         closeProgressLoader = true
     end
 end
@@ -61,14 +61,14 @@ end
 local function event(widget, category, value, x, y)
 
     if category == EVT_CLOSE and value == 0 or value == 35 then
-        inavadmin.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
+        inavsuite.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
         return true
     end
 end
 
 local function onNavMenu()
-    inavadmin.app.ui.progressDisplay(nil, nil, true)
-    inavadmin.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
+    inavsuite.app.ui.progressDisplay(nil, nil, true)
+    inavsuite.app.ui.openPage(pageIdx, "@i18n(app.modules.diagnostics.name)@", "diagnostics/diagnostics.lua")
 end
 
 return {apidata = apidata, reboot = false, eepromWrite = false, minBytes = 0, wakeup = wakeup, refreshswitch = false, simulatorResponse = {}, onNavMenu = onNavMenu, event = event, navButtons = {menu = true, save = false, reload = false, tool = false, help = false}, API = {}}
