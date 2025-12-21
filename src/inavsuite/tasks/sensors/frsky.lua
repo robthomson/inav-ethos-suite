@@ -20,156 +20,101 @@ frsky.renameSensorCache = {}
 frsky.dropSensorCache = {}
 
 local sidLookup = {
-    [1] = {'0x5100'},
-    [3] = {'0x0210'},
-    [4] = {'0x0200'},
-    [5] = {'0x5250'},
-    [6] = {'0x0600'},
-    [7] = {'0x5260'},
-    [8] = {'0x0910'},
-    [11] = {'0x51A0'},
-    [12] = {'0x51A1'},
-    [13] = {'0x51A2'},
-    [14] = {'0x51A3'},
-    [15] = {'0x51A4'},
-    [17] = {'0x0218'},
-    [18] = {'0x0208'},
-    [19] = {'0x5258'},
-    [20] = {'0x0508'},
-    [21] = {'0x5268'},
-    [22] = {'0x5269'},
-    [23] = {'0x0418'},
-    [24] = {'0x0419'},
-    [25] = {'0x0219'},
-    [26] = {'0x0229'},
-    [27] = {'0x5128'},
-    [28] = {'0x5129'},
-    [30] = {'0x021A'},
-    [31] = {'0x020A'},
-    [32] = {'0x525A'},
-    [33] = {'0x050A'},
-    [36] = {'0x041A'},
-    [41] = {'0x512B'},
-    [42] = {'0x0211'},
-    [43] = {'0x0901'},
-    [44] = {'0x0902'},
-    [45] = {'0x0900'},
-    [46] = {'0x0201'},
-    [47] = {'0x0222'},
-    [50] = {'0x0401'},
-    [51] = {'0x0402'},
-    [52] = {'0x0400'},
-    [57] = {'0x5210'},
-    [58] = {'0x0100'},
-    [59] = {'0x0110'},
-    [60] = {'0x0500'},
-    [61] = {'0x0501'},
-    [65] = {'0x0730'},
-    [66] = {'0x0730'},
-    [69] = {'0x0700'},
-    [70] = {'0x0710'},
-    [71] = {'0x0720'},
-    [77] = {'0x0800'},
-    [78] = {'0x0820'},
-    [79] = {'0x0840'},
-    [80] = {'0x0830'},
-    [85] = {'0x51D0'},
-    [86] = {'0x51D1'},
-    [87] = {'0x51D2'},
-    [88] = {'0x5120'},
-    [89] = {'0x5121'},
-    [90] = {'0x5122'},
-    [91] = {'0x5123'},
-    [92] = {'0x5124'},
-    [93] = {'0x5125'},
-    [95] = {'0x5130'},
-    [96] = {'0x5131'},
-    [99] = {'0x5110', '0x5111'}
+  [0]  = {'0x1000'}, -- None
+  [1]  = {'0x5100'}, -- Heartbeat
+
+  [3]  = {'0x0210'}, -- Battery voltage
+  [4]  = {'0x0200'}, -- Battery current
+  [5]  = {'0x5250'}, -- Battery consumption
+  [6]  = {'0x0600'}, -- Battery charge level (shares ID with BATTERY_FUEL in C)
+  [7]  = {'0x5260'}, -- Battery cell count
+  [8]  = {'0x0910'}, -- Battery cell voltage
+  [9]  = {'0x102F'}, -- Battery all cell voltages (not present in your C list)
+
+  [11] = {'0x5210'}, -- Heading
+  [12] = {'0x0100'}, -- Altitude
+  [13] = {'0x0110'}, -- Variometer
+
+  [14] = {'0x0730'}, -- Attitude (packed)
+  --[15] = {'0x1101'}, -- Attitude pitch (not present in your C list as separate IDs)
+  --[16] = {'0x1102'}, -- Attitude roll  (not present in your C list as separate IDs)
+  --[17] = {'0x1103'}, -- Attitude yaw   (not present in your C list as separate IDs)
+
+  [18] = {'0x0700'}, -- Accel X
+  [19] = {'0x0710'}, -- Accel Y
+  [20] = {'0x0720'}, -- Accel Z
+
+  [22] = {'0x0860'}, -- GPS sats
+  [23] = {'0x526B'}, -- GPS HDOP
+  [24] = {'0x0800'}, -- GPS coord (Lat/Lon)
+  [25] = {'0x0820'}, -- GPS altitude
+  [26] = {'0x0840'}, -- GPS heading
+  [27] = {'0x0830'}, -- GPS groundspeed
+  [28] = {'0x5269'}, -- GPS home distance
+  [29] = {'0x5268'}, -- GPS home direction
+  [30] = {'0x526A'}, -- GPS azimuth
+
+  [31] = {'0x1131'}, -- ESC RPM (aggregate) (not present in your C list)
+  [33] = {'0x5130'}, -- ESC1 RPM
+  [35] = {'0x5131'}, -- ESC2 RPM
+  [37] = {'0x5132'}, -- ESC3 RPM
+  [39] = {'0x5133'}, -- ESC4 RPM
+
+  [32] = {'0x1136'}, -- ESC temp (aggregate) (not present in your C list)
+  [34] = {'0x5140'}, -- ESC1 temp
+  [36] = {'0x5141'}, -- ESC2 temp
+  [38] = {'0x5142'}, -- ESC3 temp
+  [40] = {'0x5143'}, -- ESC4 temp
+
+  [42] = {'0x51D0'}, -- CPU load
+  [43] = {'0x5121'}, -- Flight mode
+  [44] = {'0x5123'}, -- Profiles
+  [45] = {'0x5122'}, -- Arming flags
 }
 
+
 local createSensorList = {}
+-- Heartbeat / System
 createSensorList[0x5100] = {name = "Heartbeat", unit = UNIT_RAW}
-createSensorList[0x5250] = {name = "Consumption", unit = UNIT_MILLIAMPERE_HOUR}
-createSensorList[0x5260] = {name = "Cell Count", unit = UNIT_RAW}
-createSensorList[0x51A0] = {name = "Pitch Control", unit = UNIT_DEGREE, decimals = 2}
-createSensorList[0x51A1] = {name = "Roll Control", unit = UNIT_DEGREE, decimals = 2}
-createSensorList[0x51A2] = {name = "Yaw Control", unit = UNIT_DEGREE, decimals = 2}
-createSensorList[0x51A3] = {name = "Collective Ctrl", unit = UNIT_DEGREE, decimals = 2}
-createSensorList[0x51A4] = {name = "Throttle %", unit = UNIT_PERCENT, decimals = 1}
-createSensorList[0x5258] = {name = "ESC1 Capacity", unit = UNIT_MILLIAMPERE_HOUR}
-createSensorList[0x5268] = {name = "ESC1 Power", unit = UNIT_PERCENT}
-createSensorList[0x5269] = {name = "ESC1 Throttle", unit = UNIT_PERCENT, decimals = 1}
-createSensorList[0x5128] = {name = "ESC1 Status", unit = UNIT_RAW}
-createSensorList[0x5129] = {name = "ESC1 Model ID", unit = UNIT_RAW}
-createSensorList[0x525A] = {name = "ESC2 Capacity", unit = UNIT_MILLIAMPERE_HOUR}
-createSensorList[0x512B] = {name = "ESC2 Model ID", unit = UNIT_RAW}
-createSensorList[0x51D0] = {name = "CPU Load", unit = UNIT_PERCENT}
-createSensorList[0x51D1] = {name = "System Load", unit = UNIT_PERCENT}
-createSensorList[0x51D2] = {name = "RT Load", unit = UNIT_PERCENT}
-createSensorList[0x5120] = {name = "Model ID", unit = UNIT_RAW}
+createSensorList[0x51D0] = {name = "CPU Load", unit = UNIT_RAW}
+
+-- Flight state
 createSensorList[0x5121] = {name = "Flight Mode", unit = UNIT_RAW}
-createSensorList[0x5122] = {name = "Arm Flags", unit = UNIT_RAW}
-createSensorList[0x5123] = {name = "Arm Dis Flags", unit = UNIT_RAW}
-createSensorList[0x5124] = {name = "Rescue State", unit = UNIT_RAW}
-createSensorList[0x5125] = {name = "Gov State", unit = UNIT_RAW}
-createSensorList[0x5130] = {name = "PID Profile", unit = UNIT_RAW}
-createSensorList[0x5131] = {name = "Rates Profile", unit = UNIT_RAW}
-createSensorList[0x5110] = {name = "Adj Function", unit = UNIT_RAW}
-createSensorList[0x5111] = {name = "Adj Value", unit = UNIT_RAW}
-createSensorList[0x5210] = {name = "Heading", unit = UNIT_DEGREE, decimals = 1}
-createSensorList[0x52F0] = {name = "Debug 0", unit = UNIT_RAW}
-createSensorList[0x52F1] = {name = "Debug 1", unit = UNIT_RAW}
-createSensorList[0x52F2] = {name = "Debug 2", unit = UNIT_RAW}
-createSensorList[0x52F3] = {name = "Debug 3", unit = UNIT_RAW}
-createSensorList[0x52F4] = {name = "Debug 4", unit = UNIT_RAW}
-createSensorList[0x52F5] = {name = "Debug 5", unit = UNIT_RAW}
-createSensorList[0x52F6] = {name = "Debug 6", unit = UNIT_RAW}
-createSensorList[0x52F8] = {name = "Debug 7", unit = UNIT_RAW}
+createSensorList[0x5122] = {name = "Arming Flags", unit = UNIT_RAW}
+createSensorList[0x5123] = {name = "Profiles", unit = UNIT_RAW}
+
+-- Battery
+createSensorList[0x5250] = {name = "Battery Consumption", unit = UNIT_RAW}
+createSensorList[0x5260] = {name = "Battery Cell Count", unit = UNIT_RAW}
+
+-- GPS
+createSensorList[0x5268] = {name = "GPS Home Direction", unit = UNIT_RAW}
+createSensorList[0x5269] = {name = "GPS Home Distance", unit = UNIT_RAW}
+createSensorList[0x526A] = {name = "GPS Azimuth", unit = UNIT_RAW}
+createSensorList[0x526B] = {name = "GPS HDOP", unit = UNIT_RAW}
+
+-- ESC RPM
+createSensorList[0x5130] = {name = "ESC1 RPM", unit = UNIT_RAW}
+createSensorList[0x5131] = {name = "ESC2 RPM", unit = UNIT_RAW}
+createSensorList[0x5132] = {name = "ESC3 RPM", unit = UNIT_RAW}
+createSensorList[0x5133] = {name = "ESC4 RPM", unit = UNIT_RAW}
+
+-- ESC Temperature
+createSensorList[0x5140] = {name = "ESC1 Temp", unit = UNIT_RAW}
+createSensorList[0x5141] = {name = "ESC2 Temp", unit = UNIT_RAW}
+createSensorList[0x5142] = {name = "ESC3 Temp", unit = UNIT_RAW}
+createSensorList[0x5143] = {name = "ESC4 Temp", unit = UNIT_RAW}
+
+
+
 
 local log = inavsuite.utils.log
 
 local dropSensorList = {}
 
 local renameSensorList = {}
-renameSensorList[0x0500] = {name = "Headspeed", onlyifname = "RPM"}
-renameSensorList[0x0501] = {name = "Tailspeed", onlyifname = "RPM"}
-
 renameSensorList[0x0210] = {name = "Voltage", onlyifname = "VFAS"}
 
-renameSensorList[0x0600] = {name = "Charge Level", onlyifname = "Fuel"}
-renameSensorList[0x0910] = {name = "Cell Voltage", onlyifname = "ADC4"}
-
-renameSensorList[0x0211] = {name = "ESC Voltage", onlyifname = "VFAS"}
-renameSensorList[0x0B70] = {name = "ESC Temp", onlyifname = "ESC temp"}
-
-renameSensorList[0x0218] = {name = "ESC1 Voltage", onlyifname = "VFAS"}
-renameSensorList[0x0208] = {name = "ESC1 Current", onlyifname = "Current"}
-renameSensorList[0x0508] = {name = "ESC1 RPM", onlyifname = "RPM"}
-renameSensorList[0x0418] = {name = "ESC1 Temp", onlyifname = "Temp2"}
-
-renameSensorList[0x0219] = {name = "BEC1 Voltage", onlyifname = "VFAS"}
-renameSensorList[0x0229] = {name = "BEC1 Current", onlyifname = "Current"}
-renameSensorList[0x0419] = {name = "BEC1 Temp", onlyifname = "Temp2"}
-
-renameSensorList[0x021A] = {name = "ESC2 Voltage", onlyifname = "VFAS"}
-renameSensorList[0x020A] = {name = "ESC2 Current", onlyifname = "Current"}
-renameSensorList[0x050A] = {name = "ESC2 RPM", onlyifname = "RPM"}
-renameSensorList[0x041A] = {name = "ESC2 Temp", onlyifname = "Temp2"}
-
-renameSensorList[0x0840] = {name = "GPS Heading", onlyifname = "GPS course"}
-
-renameSensorList[0x0900] = {name = "MCU Voltage", onlyifname = "ADC3"}
-renameSensorList[0x0901] = {name = "BEC Voltage", onlyifname = "ADC3"}
-renameSensorList[0x0902] = {name = "BUS Voltage", onlyifname = "ADC3"}
-
-renameSensorList[0x0201] = {name = "ESC Current", onlyifname = "Current"}
-renameSensorList[0x0222] = {name = "BEC Current", onlyifname = "Current"}
-
-renameSensorList[0x0400] = {name = "MCU Temp", onlyifname = "Temp1"}
-renameSensorList[0x0401] = {name = "ESC Temp", onlyifname = "Temp1"}
-renameSensorList[0x0402] = {name = "BEC Temp", onlyifname = "Temp1"}
-
-renameSensorList[0x5210] = {name = "Y.angle", onlyifname = "Heading"}
 
 frsky.createSensorCache = {}
 frsky.dropSensorCache = {}
@@ -222,7 +167,7 @@ local function dropSensor(physId, primId, appId, frameValue)
 
     if inavsuite.session.apiVersion == nil then return end
 
-    if inavsuite.session.apiVersion >= 12.08 then return end
+    if inavsuite.session.apiVersion >= 2.06 then return end
 
     if dropSensorList[appId] ~= nil then
         local v = dropSensorList[appId]

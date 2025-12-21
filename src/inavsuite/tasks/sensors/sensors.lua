@@ -32,7 +32,7 @@ local function loadSensorModule()
     elseif protocol == "crsf" then
         if not loadedSensorModule or loadedSensorModule.name ~= "elrs" then loadedSensorModule = {name = "elrs", module = assert(loadfile("tasks/sensors/elrs.lua"))(config)} end
     elseif protocol == "sport" then
-        if inavsuite.utils.apiVersionCompare(">=", "2.05") then
+        if inavsuite.utils.apiVersionCompare(">=", "2.06") then
             if not loadedSensorModule or loadedSensorModule.name ~= "frsky" then loadedSensorModule = {name = "frsky", module = assert(loadfile("tasks/sensors/frsky.lua"))(config)} end
         else
             if not loadedSensorModule or loadedSensorModule.name ~= "frsky_legacy" then loadedSensorModule = {name = "frsky_legacy", module = assert(loadfile("tasks/sensors/frsky_legacy.lua"))(config)} end
